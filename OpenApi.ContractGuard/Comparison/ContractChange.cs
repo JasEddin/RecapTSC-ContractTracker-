@@ -13,5 +13,21 @@ namespace OpenApi.ContractGuard.Comparison
         public string Message { get; set; } = "";
  
         public ChangeImpact Impact { get; set; }
+
+        internal static ContractChange Create(
+          ChangeType type,
+          string message,
+          string path = "",
+          string operation = "")
+        {
+            return new ContractChange
+            {
+                ChangeType = type,
+                Message = message,
+                Path = path,
+                Operation = operation,
+                Impact = ChangeImpactRules.GetImpact(type)
+            };
+        }
     }
 }
