@@ -15,3 +15,4 @@ namespace OpenApi.ContractGuard.Comparison.enums
         OperationRemoved
     }
 }
+    
