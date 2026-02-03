@@ -13,14 +13,17 @@ namespace OpenApi.ContractGuard.Reporting
                 return;
             }
 
-            WriteWarning("Detected Changes:");
-
             if (changes.Any(change => change.Impact == ChangeImpact.ContractUpdateRequired))
             {
-                // I want to make this more visible
-
-                WriteError("Contract changes detected that require an update to the contract.");
+                WriteCriticalBanner();
             }
+            else
+            {
+                WriteSuccess("Result: No contract update required.");
+            }
+
+            Console.WriteLine();
+            WriteWarning("Detected Changes:");
 
             foreach (var change in changes)
             {
@@ -28,15 +31,32 @@ namespace OpenApi.ContractGuard.Reporting
             }
         }
 
+        private static void WriteCriticalBanner()
+        {
+            var title = "CRITICAL: Contract changes detected that require an update to the contract.";
+            var message = "Please review the changes and update the contract accordingly.";
+            var previousColor = Console.ForegroundColor;
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(new string('=', 80));
+            Console.WriteLine(title);
+            Console.WriteLine(new string('-', 80));
+            Console.WriteLine(message);
+            Console.WriteLine(new string('=', 80));
+            Console.WriteLine();
+
+            Console.ForegroundColor = previousColor;
+        }
+
         private static void WriteChange(ContractChange change)
         {
             switch (change.Impact)
             {
                 case ChangeImpact.ContractUpdateRequired:
-                    WriteError($"{change.Message}");
+                    WriteError($"[BREAKING] {change.Message}");
                     break;
                 case ChangeImpact.Informational:
-                    WriteWarning($"{change.Message}");
+                    WriteWarning($"[INFO] {change.Message}");
                     break;
                 default:
                     break;
@@ -68,7 +88,3 @@ namespace OpenApi.ContractGuard.Reporting
         }
     }
 }
-
-
-
-
