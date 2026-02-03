@@ -1,5 +1,8 @@
 ﻿using Microsoft.OpenApi.Models;
 using OpenApi.ContractGuard.Comparison.enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 
 
@@ -61,14 +64,14 @@ namespace OpenApi.ContractGuard.Comparison
             }
         }
 
-        private void CheckVersions(
-            OpenApiDocument oldDoc,
-            OpenApiDocument newDoc,
-            List<ContractChange> changes)
+       private void CheckVersions(
+           OpenApiDocument oldDoc,
+           OpenApiDocument newDoc,
+           List<ContractChange> changes)
         {
             var oldVersion = oldDoc.Info.Version;
             var newVersion = newDoc.Info.Version;
-            if (!String.Equals(oldVersion, newVersion, StringComparison.Ordinal))
+            if (!String.Equals(oldVersion, newVersion,StringComparison.Ordinal))
             {
                 changes.Add(ContractChange.Create(
                     ChangeType.VersionChanged,
@@ -95,7 +98,8 @@ namespace OpenApi.ContractGuard.Comparison
             foreach (var oldPath in oldDoc.Paths)
             {
                 {
-                    changes.Add(ContractChange.Create(
+                    if (!newDoc.Paths.ContainsKey(oldPath.Key))
+                        changes.Add(ContractChange.Create(
                         ChangeType.PathRemoved,
                         $"Path removed: {oldPath.Key}",
                         oldPath.Key));
