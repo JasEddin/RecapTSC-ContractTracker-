@@ -1,8 +1,5 @@
 ﻿using Microsoft.OpenApi.Models;
 using OpenApi.ContractGuard.Comparison.enums;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 
 
@@ -18,6 +15,7 @@ namespace OpenApi.ContractGuard.Comparison
 
             CheckPaths(oldDoc, newDoc, changes);
             CheckOperations(oldDoc, newDoc, changes);
+            CheckVersions(oldDoc, newDoc, changes);
 
             return changes;
         }
@@ -63,6 +61,20 @@ namespace OpenApi.ContractGuard.Comparison
             }
         }
 
+        private void CheckVersions(
+            OpenApiDocument oldDoc,
+            OpenApiDocument newDoc,
+            List<ContractChange> changes)
+        {
+            var oldVersion = oldDoc.Info.Version;
+            var newVersion = newDoc.Info.Version;
+            if (!String.Equals(oldVersion, newVersion, StringComparison.Ordinal))
+            {
+                changes.Add(ContractChange.Create(
+                    ChangeType.VersionChanged,
+                    $"API version changed from {oldVersion} to {newVersion}"));
+            }
+        }
 
         private void CheckPaths(
                     OpenApiDocument oldDoc,
