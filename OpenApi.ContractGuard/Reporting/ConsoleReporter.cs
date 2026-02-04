@@ -5,7 +5,7 @@ namespace OpenApi.ContractGuard.Reporting
 {
     public static class ConsoleReporter
     {
-        public static void ReportChanges(IEnumerable<ContractChange> changes)
+        public static void DetailedReportChanges(IEnumerable<ContractChange> changes)
         {
             if (!changes.Any())
             {
@@ -30,6 +30,25 @@ namespace OpenApi.ContractGuard.Reporting
                 WriteChange(change);
             }
         }
+
+        public static void ShortReportChanges(string apisName,IEnumerable<ContractChange> changes)
+        {
+            if (!changes.Any())
+            {
+                WriteSuccess($"{apisName}: No contract changes detected.");
+                return;
+            }
+            if (changes.Any(change => change.Impact == ChangeImpact.ContractUpdateRequired))
+            {
+                WriteError($"{apisName}: CRITICAL - Contract changes detected that require an update to the contract.");
+            }
+            else
+            {
+                WriteSuccess($"{apisName}: No contract update required.");
+            }
+
+        }
+
 
         private static void WriteCriticalBanner()
         {
