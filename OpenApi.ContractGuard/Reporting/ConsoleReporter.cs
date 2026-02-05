@@ -5,33 +5,45 @@ namespace OpenApi.ContractGuard.Reporting
 {
     public static class ConsoleReporter
     {
-        public static void DetailedReportChanges(IEnumerable<ContractChange> changes)
+        public static void DetailedReportChanges(Dictionary<string, List<ContractChange>> apiAndChanges)
         {
-            if (!changes.Any())
+            foreach (var apiChanges in apiAndChanges)
             {
-                WriteSuccess("No contract changes detected.");
-                return;
-            }
+                Console.WriteLine();
+                Console.ReadKey();
+                var apisName = apiChanges.Key;
+                var changes = apiChanges.Value;
+                var spaceTabes = new string(' ', 15);
+                Console.WriteLine(new string('=', 80));
+                Console.WriteLine($"API: {spaceTabes + apisName}");
+                Console.WriteLine(new string('=', 80));
 
-            if (changes.Any(change => change.Impact == ChangeImpact.ContractUpdateRequired))
-            {
-                WriteCriticalBanner();
-            }
-            else
-            {
-                WriteSuccess("Result: No contract update required.");
-            }
+                if (!changes.Any())
+                {
+                    WriteSuccess("No contract changes detected.");
+                    return;
+                }
 
-            Console.WriteLine();
-            WriteWarning("Detected Changes:");
+                if (changes.Any(change => change.Impact == ChangeImpact.ContractUpdateRequired))
+                {
+                    WriteCriticalBanner();
+                }
+                else
+                {
+                    WriteSuccess("Result: No contract update required.");
+                }
 
-            foreach (var change in changes)
-            {
-                WriteChange(change);
+                WriteInfo("Detected Changes:");
+
+                foreach (var change in changes)
+                {
+                    WriteChange(change);
+                }
+                Console.WriteLine();
             }
         }
 
-        public static void ShortReportChanges(string apisName,IEnumerable<ContractChange> changes)
+        public static void ShortReportChanges(string apisName, IEnumerable<ContractChange> changes)
         {
             if (!changes.Any())
             {
@@ -49,7 +61,6 @@ namespace OpenApi.ContractGuard.Reporting
 
         }
 
-
         private static void WriteCriticalBanner()
         {
             var title = "CRITICAL: Contract changes detected that require an update to the contract.";
@@ -62,7 +73,6 @@ namespace OpenApi.ContractGuard.Reporting
             Console.WriteLine(new string('-', 80));
             Console.WriteLine(message);
             Console.WriteLine(new string('=', 80));
-            Console.WriteLine();
 
             Console.ForegroundColor = previousColor;
         }
@@ -102,6 +112,14 @@ namespace OpenApi.ContractGuard.Reporting
         {
             var previousColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(message);
+            Console.ForegroundColor = previousColor;
+        }
+
+        private static void WriteInfo(string message)
+        {
+            var previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine(message);
             Console.ForegroundColor = previousColor;
         }

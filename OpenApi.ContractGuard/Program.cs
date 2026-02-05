@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using OpenApi.ContractGuard.Comparison;
-using OpenApi.ContractGuard.Reporting;
 using OpenApi.ContractGuard.Services;
 
 var configuration = new ConfigurationBuilder()
@@ -11,4 +9,5 @@ var configuration = new ConfigurationBuilder()
 var compareService = new ContractComparerService(configuration);
 
 compareService.Run();
+compareService.GetComparisonResults();
 

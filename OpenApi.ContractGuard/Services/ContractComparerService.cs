@@ -2,13 +2,14 @@
 using OpenApi.ContractGuard.Comparison;
 using OpenApi.ContractGuard.Configurations;
 using OpenApi.ContractGuard.Reporting;
-
+    
 namespace OpenApi.ContractGuard.Services
 {
     internal class ContractComparerService
     {
         public IConfiguration _config { get; }
-        public Dictionary<string, List<ContractChange>> apiAndChanges = new Dictionary<string, List<ContractChange>>();
+
+        public Dictionary<string, List<ContractChange>> _ApiAndChanges = new Dictionary<string, List<ContractChange>>();
 
         public ContractComparerService(IConfiguration config)
         {
@@ -35,12 +36,19 @@ namespace OpenApi.ContractGuard.Services
                     var comparer = new OpenApiComparer();
                     List<ContractChange> changes = comparer.Compare(file1Task.Result, file2);
 
-                    apiAndChanges.Add(apiName, changes);
+                    _ApiAndChanges.Add(apiName, changes);
 
                     ConsoleReporter.ShortReportChanges(apiName, changes);
 
                 }
             }
         }
+        
+        public void GetComparisonResults()
+        {
+             ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
+        }
+
     }
 }
+ 
