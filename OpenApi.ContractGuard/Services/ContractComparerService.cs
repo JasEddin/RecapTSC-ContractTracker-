@@ -2,53 +2,63 @@
 using OpenApi.ContractGuard.Comparison;
 using OpenApi.ContractGuard.Configurations;
 using OpenApi.ContractGuard.Reporting;
-    
+
 namespace OpenApi.ContractGuard.Services
 {
     internal class ContractComparerService
     {
-        public IConfiguration _config { get; }
+        public readonly IConfiguration _config;
 
-        public Dictionary<string, List<ContractChange>> _ApiAndChanges = new Dictionary<string, List<ContractChange>>();
+        public Dictionary<string, List<ContractChange>> _ApiAndChanges = new();
 
         public ContractComparerService(IConfiguration config)
         {
             _config = config;
         }
 
-        public void Run()
+
+        public async Task RunAsync()
         {
-            // Implementation for comparing contracts goes here
-            IEnumerable<IConfigurationSection> trackedApis = _config.GetSection("TrackedApis").GetChildren();
-
-            foreach (var ApiSection in trackedApis)
+            try
             {
-                var apiName = ApiSection.Key;
 
-                var apiConfig = ApiSection.Get<TrackedApiConfig>();
+                // Implementation for comparing contracts goes here
+                IEnumerable<IConfigurationSection> trackedApis = _config.GetSection("TrackedApis").GetChildren();
 
-                if (apiConfig != null)
+                foreach (var ApiSection in trackedApis)
                 {
+                    var apiName = ApiSection.Key;
 
-                    var file1Task = new OpenApiLoader().LoadFromUrlAsync(apiConfig.Url);
-                    var file2 = new OpenApiLoader().LoadFromPath(apiConfig.LocalContractPath);
+                    var apiConfig = ApiSection.Get<TrackedApiConfig>();
 
-                    var comparer = new OpenApiComparer();
-                    List<ContractChange> changes = comparer.Compare(file1Task.Result, file2);
+                    if (apiConfig != null)
+                    {
 
-                    _ApiAndChanges.Add(apiName, changes);
+                        var file1 = await new OpenApiLoader().LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
 
-                    ConsoleReporter.ShortReportChanges(apiName, changes);
+                        var file2 = new OpenApiLoader().LoadFromPath(apiConfig.LocalContractPath);
 
+                        var comparer = new OpenApiComparer();
+                        List<ContractChange> changes = comparer.Compare(file1, file2);
+
+                        _ApiAndChanges.Add(apiName, changes);
+
+                        ConsoleReporter.ShortReportChanges(apiName, changes);
+
+                    }
                 }
+
+            }
+            catch (Exception ex)
+            {
+                ConsoleReporter.WriteError($"An error occurred during contract comparison: {ex.Message}");
             }
         }
-        
+
         public void GetComparisonResults()
         {
-             ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
+            ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
         }
 
     }
 }
- 

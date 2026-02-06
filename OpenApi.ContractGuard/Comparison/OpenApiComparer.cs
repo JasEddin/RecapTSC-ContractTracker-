@@ -64,14 +64,14 @@ namespace OpenApi.ContractGuard.Comparison
             }
         }
 
-       private void CheckVersions(
-           OpenApiDocument oldDoc,
-           OpenApiDocument newDoc,
-           List<ContractChange> changes)
+        private void CheckVersions(
+            OpenApiDocument oldDoc,
+            OpenApiDocument newDoc,
+            List<ContractChange> changes)
         {
             var oldVersion = oldDoc.Info.Version;
             var newVersion = newDoc.Info.Version;
-            if (!String.Equals(oldVersion, newVersion,StringComparison.Ordinal))
+            if (!String.Equals(oldVersion, newVersion, StringComparison.Ordinal))
             {
                 changes.Add(ContractChange.Create(
                     ChangeType.VersionChanged,

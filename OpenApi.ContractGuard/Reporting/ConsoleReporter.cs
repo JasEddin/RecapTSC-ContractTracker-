@@ -61,6 +61,14 @@ namespace OpenApi.ContractGuard.Reporting
 
         }
 
+        public static void WriteError(string message)
+        {
+            var previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(message);
+            Console.ForegroundColor = previousColor;
+        }
+
         private static void WriteCriticalBanner()
         {
             var title = "CRITICAL: Contract changes detected that require an update to the contract.";
@@ -96,14 +104,6 @@ namespace OpenApi.ContractGuard.Reporting
         {
             var previousColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(message);
-            Console.ForegroundColor = previousColor;
-        }
-
-        private static void WriteError(string message)
-        {
-            var previousColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(message);
             Console.ForegroundColor = previousColor;
         }

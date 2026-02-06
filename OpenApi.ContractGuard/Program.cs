@@ -8,6 +8,6 @@ var configuration = new ConfigurationBuilder()
 
 var compareService = new ContractComparerService(configuration);
 
-compareService.Run();
+await compareService.RunAsync();
 compareService.GetComparisonResults();
 
