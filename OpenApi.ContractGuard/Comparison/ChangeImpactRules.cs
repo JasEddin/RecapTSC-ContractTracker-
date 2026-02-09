@@ -1,7 +1,4 @@
 ﻿using OpenApi.ContractGuard.Comparison.enums;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OpenApi.ContractGuard.Comparison
 {
@@ -11,10 +8,10 @@ namespace OpenApi.ContractGuard.Comparison
         {
             return changeType switch
             {
-                ChangeType.VersionChanged => ChangeImpact.ContractUpdateRequired,
+                ChangeType.VersionChanged => ChangeImpact.Informational,
                 ChangeType.PathAdded => ChangeImpact.ContractUpdateRequired,
                 ChangeType.OperationAdded => ChangeImpact.ContractUpdateRequired,
-                ChangeType.PathRemoved => ChangeImpact.Informational,
+                ChangeType.PathRemoved => ChangeImpact.ContractUpdateRequired,
                 ChangeType.OperationRemoved => ChangeImpact.Informational,
                 _ => ChangeImpact.Informational
             };

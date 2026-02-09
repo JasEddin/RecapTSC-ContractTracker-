@@ -21,7 +21,7 @@ namespace OpenApi.ContractGuard.Reporting
                 if (!changes.Any())
                 {
                     WriteSuccess("No contract changes detected.");
-                    return;
+                    continue;
                 }
 
                 if (changes.Any(change => change.Impact == ChangeImpact.ContractUpdateRequired))
