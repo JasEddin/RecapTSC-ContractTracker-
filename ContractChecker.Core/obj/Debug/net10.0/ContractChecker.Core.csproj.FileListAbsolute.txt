@@ -1,0 +1,11 @@
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\bin\Debug\net10.0\ContractChecker.Core.deps.json
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\bin\Debug\net10.0\ContractChecker.Core.dll
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\bin\Debug\net10.0\ContractChecker.Core.pdb
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ContractChecker.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ContractChecker.Core.AssemblyInfoInputs.cache
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ContractChecker.Core.AssemblyInfo.cs
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ContractChecker.Core.csproj.CoreCompileInputs.cache
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ContractChecker.Core.dll
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\refint\ContractChecker.Core.dll
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ContractChecker.Core.pdb
+C:\projects\OpenApi.ContractGuard\ContractChecker.Core\obj\Debug\net10.0\ref\ContractChecker.Core.dll

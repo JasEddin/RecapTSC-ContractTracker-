@@ -1,4 +1,5 @@
 .vs/
-/OpenApi.ContractGuard/obj
-/OpenApi.ContractGuard/bin/
-/obj
+/*/obj
+/*/bin/
+**/bin/
+**/obj/

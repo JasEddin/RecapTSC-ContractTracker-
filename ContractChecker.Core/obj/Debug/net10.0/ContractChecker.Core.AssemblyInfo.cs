@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ContractChecker.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15633b8fff51c03c0c06e934af1586cea7a5dbf6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c6ec31f28b33ef0d388b9a642d0dc8a26fe4df8d")]
 [assembly: System.Reflection.AssemblyProductAttribute("ContractChecker.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ContractChecker.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
