@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="ContractChecker.Api/ContractChecker.Api.csproj" />
+  <Project Path="ContractChecker.Core/ContractChecker.Core.csproj" />
   <Project Path="OpenApi.ContractGuard/OpenApi.ContractGuard.csproj" />
 </Solution>
