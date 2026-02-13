@@ -1,23 +1,33 @@
 import Logo from "./assets/logo.svg";
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
 function App() {
-  const applications = [
-    "App1",
-    "App2",
-    "App3",
-    "App4",
-    "App5",
-    "App6",
-    "App7",
-    "App8",
-    "App9",
-    "App10",
-  ];
 
-  const [selectedApp, setSelectedApp] = useState<string | null>(null);
+
+type Application= {
+  id: string;
+  name: string;
+}
+
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("http://localhost:5093/api/applications")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load applications");
+        return res.json();
+      })
+      .then(setApplications)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+ 
   return (
     <>
       {!selectedApp && (
@@ -31,23 +41,26 @@ function App() {
 
             <h2 className="section-title">Tracked applications</h2>
 
-            <div className="app-list">
+           {loading && <p>Loading applications...</p>}
+           {error && <p>Error: {error}</p>}
+           {!loading && !error && (
+             <div className="app-list">
               {applications.map((app, index) => (
                 <div
-                  key={app}
+                  key={app.id}
                   className="app-card slide-up"
                   style={{ animationDelay: `${index * 60}ms` }}
                   onClick={() => setSelectedApp(app)}
                 >
-                  {app}
+                  {app.name}
                 </div>
               ))}
-            </div>
+            </div>)}
           </div>
         </div>
-      )}
+      ) } 
 
-      {selectedApp && (
+      {selectedApp && !loading && !error && (
         <div className="page">
           <div className="layout">
             {/* ASIDE / LEFT MENU */}
@@ -60,12 +73,12 @@ function App() {
               <div className="sidebar-list">
                 {applications.map((app) => (
                   <div
-                    key={app}
+                    key={app.id}
                     className={`sidebar-item ${selectedApp === app ? "active" : ""
                       }`}
                     onClick={() => setSelectedApp(app)}
                   >
-                    {app}
+                    {app.name}
                   </div>
                 ))}
               </div>
@@ -74,7 +87,7 @@ function App() {
             {/* MAIN CONTENT */}
             <main className="main">
               <ContractComparisonResult
-                appName={selectedApp}
+                appName={selectedApp.name}
                 beforeVersion="v1.2.0"
                 afterVersion="v1.3.0"
                 breakingChanges={[
