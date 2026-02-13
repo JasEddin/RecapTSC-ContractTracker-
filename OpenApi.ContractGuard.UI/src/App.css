@@ -191,3 +191,88 @@ body {
   color: #64748b;
   font-style: italic;
 }
+/* Layout */
+.layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #020617;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.sidebar-logo {
+  width: 36px;
+}
+
+.sidebar-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Sidebar list */
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #020617;
+  color: #e5e7eb;
+  padding: 20px 12px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.sidebar-logo {
+  width: 32px;
+}
+
+.sidebar-title {
+  font-weight: 600;
+}
+
+.sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-item {
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-item.active {
+  background: #38bdf8;
+  color: #020617;
+  font-weight: 600;
+}
+
+/* Main panel */
+.main {
+  flex: 1;
+  padding: 48px;
+  background: #f8fafc;
+}
