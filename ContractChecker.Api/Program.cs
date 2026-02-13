@@ -1,13 +1,16 @@
 ﻿using ContractChecker.Core;
 
 var builder = WebApplication.CreateBuilder(args);
-
+IConfigurationRoot configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
 // 🔹 Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 🔹 Register your Core service
 builder.Services.AddScoped<ContractDiffService>();
+builder.Services.AddScoped<IApplicationProvider, ApplicationProvider>();
 
 builder.Services.AddCors(options =>
 {
@@ -35,16 +38,15 @@ app.UseCors();
 app.MapGet("/ping", () => "Swagger is working");
 
 
-
-app.MapGet("/api/applications", () =>
+app.MapGet("/api/applications", (IApplicationProvider provider) =>
 {
-    return new[]
+    var apps = provider.GetApplications(configuration);
+
+    return apps.Select(a => new
     {
-        new { id = "app1", name = "RiskBedomning.Rest" },
-        new { id = "app2", name = "InsuranceClaims.Api" },
-        new { id = "app3", name = "Fason.Api" },
-        new { id = "app4", name = "Some.Api" }
-    };
+        id = a.Id,
+        name = a.Name
+    });
 });
 
 app.Run();
