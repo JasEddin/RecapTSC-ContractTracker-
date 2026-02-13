@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Background -->
+  <rect width="256" height="256" rx="48" fill="#0F172A"></rect>
+
+  <!-- Shield -->
+  <path d="M128 30L196 58V124C196 170 160 208 128 228C96 208 60 170 60 124V58L128 30Z" fill="#020617" stroke="#7DD3FC" stroke-width="3"></path>
+
+  <!-- Upper eye curve (soft & feminine) -->
+  <path d="M84 130C104 108 152 108 172 130" fill="none" stroke="#7DD3FC" stroke-width="5" stroke-linecap="round"></path>
+
+  <!-- Lower eye curve -->
+  <path d="M84 130C104 150 152 150 172 130" fill="none" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round" opacity="0.7"></path>
+
+  <!-- Eyelashes -->
+  <path d="M100 116L96 108" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path>
+  <path d="M116 112L114 104" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path>
+  <path d="M140 112L142 104" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path>
+  <path d="M156 116L160 108" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path>
+
+  <!-- Eye white -->
+  <ellipse cx="128" cy="132" rx="24" ry="14" fill="#F8FAFC"></ellipse>
+
+  <!-- Iris -->
+  <circle cx="128" cy="132" r="9" fill="#38BDF8"></circle>
+
+  <!-- Pupil -->
+  <circle cx="128" cy="132" r="4" fill="#020617"></circle>
+
+  <!-- Subtle highlight -->
+  <circle cx="131" cy="129" r="2" fill="#E0F2FE"></circle>
+
+  <!-- Contract line (elegant) -->
+  <line x1="112" y1="162" x2="144" y2="162" stroke="#7DD3FC" stroke-width="4" stroke-linecap="round"></line>
+</svg>
