@@ -1,13 +1,25 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using OpenApi.ContractGuard.Comparison;
 using OpenApi.ContractGuard.Services;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
+var builder = Host.CreateApplicationBuilder(args);
 
+// configuration
+builder.Configuration.AddJsonFile("appsettings.json", optional: false);
 
-var compareService = new ContractComparerService(configuration);
+// DI registrations
+builder.Services.AddSingleton<IOpenApiLoader, OpenApiLoader>();
+builder.Services.AddSingleton<IContractComparer, OpenApiComparer>();
+builder.Services.AddSingleton<IContractComparerService, ContractComparerService>();
 
-await compareService.RunAsync();
-compareService.GetComparisonResults();
+var app = builder.Build();
+
+// resolve & run
+var comparerService = app.Services
+    .GetRequiredService<IContractComparerService>();
+
+await comparerService.RunAsync();
+comparerService.GetComparisonResults();
 

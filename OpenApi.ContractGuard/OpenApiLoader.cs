@@ -2,7 +2,7 @@
 using Microsoft.OpenApi.Readers;
 using System;
 
-public class OpenApiLoader
+public class OpenApiLoader : IOpenApiLoader
 {
     public OpenApiDocument LoadFromPath(string path)
     {

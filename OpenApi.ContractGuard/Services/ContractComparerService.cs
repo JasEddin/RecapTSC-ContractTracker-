@@ -5,7 +5,7 @@ using OpenApi.ContractGuard.Reporting;
 
 namespace OpenApi.ContractGuard.Services
 {
-    internal class ContractComparerService
+    internal class ContractComparerService : IContractComparerService
     {
         public readonly IConfiguration _config;
 
@@ -58,6 +58,12 @@ namespace OpenApi.ContractGuard.Services
         public void GetComparisonResults()
         {
             ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
+        }
+
+        public string GetComparisonResultsTest()
+        {
+            ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
+            return string.Empty;
         }
 
     }

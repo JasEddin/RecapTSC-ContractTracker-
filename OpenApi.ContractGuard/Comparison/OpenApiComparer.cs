@@ -8,7 +8,7 @@ using System.Text;
 
 namespace OpenApi.ContractGuard.Comparison
 {
-    public class OpenApiComparer
+    public class OpenApiComparer : IContractComparer
     {
         public List<ContractChange> Compare(
             OpenApiDocument oldDoc,
