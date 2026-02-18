@@ -3,15 +3,28 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
-function App() {
-
-
-type Application= {
+type Application = {
   id: string;
   name: string;
 }
 
+export type ApplicationDetails = {
+  name: string;
+  url: string;
+  localContractPath: string;
+  changes: {
+    changeType: number;
+    path: string;
+    operation: string;
+    message: string;
+    impact: number;
+  }[];
+};
+
+function App() {
+
   const [applications, setApplications] = useState<Application[]>([]);
+  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +40,23 @@ type Application= {
       .finally(() => setLoading(false));
   }, []);
 
- 
+  useEffect(() => {
+    if (selectedApp) {
+      document.title = `${selectedApp.name} - OpenAPI Contract Tracker`;
+      debugger;
+      fetch(`http://localhost:5093/api/application/${selectedApp.id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load application details");
+          return res.json();
+        })
+        .then((data) => {
+          setApplicationDetails(data);
+        })
+        .catch((err) => setError(err.message));
+    }
+  }, [selectedApp]);
+
+
   return (
     <>
       {!selectedApp && (
@@ -41,24 +70,24 @@ type Application= {
 
             <h2 className="section-title">Tracked applications</h2>
 
-           {loading && <p>Loading applications...</p>}
-           {error && <p>Error: {error}</p>}
-           {!loading && !error && (
-             <div className="app-list">
-              {applications.map((app, index) => (
-                <div
-                  key={app.id}
-                  className="app-card slide-up"
-                  style={{ animationDelay: `${index * 60}ms` }}
-                  onClick={() => setSelectedApp(app)}
-                >
-                  {app.name}
-                </div>
-              ))}
-            </div>)}
+            {loading && <p>Loading applications...</p>}
+            {error && <p>Error: {error}</p>}
+            {!loading && !error && (
+              <div className="app-list">
+                {applications.map((app, index) => (
+                  <div
+                    key={app.id}
+                    className="app-card slide-up"
+                    style={{ animationDelay: `${index * 60}ms` }}
+                    onClick={() => setSelectedApp(app)}
+                  >
+                    {app.name}
+                  </div>
+                ))}
+              </div>)}
           </div>
         </div>
-      ) } 
+      )}
 
       {selectedApp && !loading && !error && (
         <div className="page">
@@ -83,32 +112,23 @@ type Application= {
                 ))}
               </div>
             </aside>
+            {selectedApp && applicationDetails ? (
 
-            {/* MAIN CONTENT */}
-            <main className="main">
-              <ContractComparisonResult
-                appName={selectedApp.name}
-                beforeVersion="v1.2.0"
-                afterVersion="v1.3.0"
-                breakingChanges={[
-                  {
-                    type: "breaking",
-                    message: "Removed field `userId` from /orders",
-                  },
-                ]}
-                informationalChanges={[
-                  {
-                    type: "info",
-                    message: "Added optional field `nickname`",
-                  },
-                ]}
-              />
-            </main>
+              <main className="main">
+                <ContractComparisonResult {...applicationDetails!} />
+              </main>
+
+            ) : (
+              <div className="main-placeholder">
+                <p>Select an application to view details</p>
+              </div>
+            )}
           </div>
         </div>
 
       )}
-    </>)
+    </>
+  );
 }
 
 
