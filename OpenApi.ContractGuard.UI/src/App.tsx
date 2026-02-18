@@ -43,7 +43,6 @@ function App() {
   useEffect(() => {
     if (selectedApp) {
       document.title = `${selectedApp.name} - OpenAPI Contract Tracker`;
-      debugger;
       fetch(`http://localhost:5093/api/application/${selectedApp.id}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to load application details");
