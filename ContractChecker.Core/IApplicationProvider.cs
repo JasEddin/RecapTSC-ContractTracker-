@@ -3,5 +3,6 @@ using Microsoft.Extensions.Configuration;
 
 public interface IApplicationProvider
 {
-     IEnumerable<ApplicationInfo> GetApplications(IConfiguration configuration);
+    Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync();
+    Task<ApplicationDetail> GetApplicationAsync(string id);
 }

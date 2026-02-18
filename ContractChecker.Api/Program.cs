@@ -38,15 +38,18 @@ app.UseCors();
 app.MapGet("/ping", () => "Swagger is working");
 
 
-app.MapGet("/api/applications", (IApplicationProvider provider) =>
+app.MapGet("/api/applications", async (IApplicationProvider provider) =>
 {
-    var apps = provider.GetApplications(configuration);
+    var result = await provider.GetApplicationsAsync();
 
-    return apps.Select(a => new
-    {
-        id = a.Id,
-        name = a.Name
-    });
+    return Results.Ok(result);
+});
+
+
+app.MapGet("/api/application/{id}", async (IApplicationProvider provider, string id) =>
+{
+    var result = await provider.GetApplicationAsync(id);
+    return Results.Ok(result);
 });
 
 app.Run();
