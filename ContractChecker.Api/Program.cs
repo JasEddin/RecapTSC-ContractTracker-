@@ -10,7 +10,7 @@ builder.Services.AddSwaggerGen();
 
 // 🔹 Register your Core service
 builder.Services.AddScoped<ContractDiffService>();
-builder.Services.AddScoped<IApplicationProvider, ApplicationProvider>();
+builder.Services.AddSingleton<IApplicationProvider, ApplicationProvider>();
 
 builder.Services.AddCors(options =>
 {
