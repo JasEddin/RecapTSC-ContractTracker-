@@ -9,9 +9,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 🔹 Register your Core service
-builder.Services.AddSingleton<IOpenApiLoader, OpenApiLoader>();
+builder.Services.AddTransient<IOpenApiLoader, OpenApiLoader>();
 builder.Services.AddSingleton<IApplicationProvider, ApplicationProvider>();
-
+builder.Services.AddHealthChecks();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -33,10 +33,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseHttpsRedirection();
 
-// 🔹 Temporary test endpoint
-app.MapGet("/ping", () => "Swagger is working");
-
+app.MapHealthChecks("/health");
 
 app.MapGet("/api/applications", async (IApplicationProvider provider) =>
 {
