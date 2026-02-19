@@ -4,14 +4,17 @@ using OpenApi.ContractGuard.Comparison;
 
 public class ApplicationProvider : IApplicationProvider
 {
-
     public Dictionary<string, (string url, string localContractPath, List<ContractChange> changes)> _apiAnddChanges = [];
+   
     private bool _initialized;
-
+    
+    private IOpenApiLoader _openApiLoader;
+    
     public IConfiguration _configuration { get; }
 
-    public ApplicationProvider(IConfiguration configuration)
+    public ApplicationProvider(IConfiguration configuration, IOpenApiLoader openApiLoader)
     {
+        _openApiLoader=openApiLoader;
         _configuration = configuration;
     }
 
@@ -70,9 +73,9 @@ public class ApplicationProvider : IApplicationProvider
             if (apiConfig != null)
             {
 
-                var file1 = await new OpenApiLoader().LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
+                var file1 = await _openApiLoader.LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
 
-                var file2 = new OpenApiLoader().LoadFromPath(apiConfig.LocalContractPath);
+                var file2 = _openApiLoader.LoadFromPath(apiConfig.LocalContractPath);
 
                 var comparer = new OpenApiComparer();
                 List<ContractChange> changes = comparer.Compare(file1, file2);

@@ -9,6 +9,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 🔹 Register your Core service
+builder.Services.AddSingleton<IOpenApiLoader, OpenApiLoader>();
 builder.Services.AddSingleton<IApplicationProvider, ApplicationProvider>();
 
 builder.Services.AddCors(options =>
