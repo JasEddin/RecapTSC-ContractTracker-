@@ -59,12 +59,5 @@ namespace OpenApi.ContractGuard.Services
         {
             ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
         }
-
-        public string GetComparisonResultsTest()
-        {
-            ConsoleReporter.DetailedReportChanges(_ApiAndChanges);
-            return string.Empty;
-        }
-
     }
 }
