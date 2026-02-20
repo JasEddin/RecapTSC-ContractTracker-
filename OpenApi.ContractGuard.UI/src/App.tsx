@@ -106,7 +106,12 @@ function App() {
                       }`}
                     onClick={() => setSelectedApp(app)}
                   >
-                    {app.name}
+                    <span className="sidebar-icon">
+                      {app.changeImpact === 1 ? "🛑" : "🟢"}
+                    </span> 
+                    <span className="sidebar-text">
+                      {app.name}
+                    </span>
                   </div>
                 ))}
               </div>

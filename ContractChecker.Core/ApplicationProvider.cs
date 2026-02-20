@@ -60,7 +60,6 @@ public class ApplicationProvider : IApplicationProvider
 
             if (apiConfig != null)
             {
-
                 var file1 = await _openApiLoader.LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
 
                 var file2 = _openApiLoader.LoadFromPath(apiConfig.LocalContractPath);
@@ -69,7 +68,6 @@ public class ApplicationProvider : IApplicationProvider
                 List<ContractChange> changes = comparer.Compare(file1, file2);
 
                 _apiAnddChanges.Add(apiName, (apiConfig.Url, apiConfig.LocalContractPath, changes));
-
             }
         }
         _initialized = true;
