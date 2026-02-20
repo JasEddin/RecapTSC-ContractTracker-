@@ -45,9 +45,9 @@ app.MapGet("/api/applications", async (IApplicationProvider provider) =>
 });
 
 
-app.MapGet("/api/application/{id}", async (IApplicationProvider provider, string id) =>
+app.MapGet("/api/application/{name}", async (IApplicationProvider provider, string name ) =>
 {
-    var result = await provider.GetApplicationAsync(id);
+    var result = await provider.GetApplicationAsync(name);
     return Results.Ok(result);
 });
 

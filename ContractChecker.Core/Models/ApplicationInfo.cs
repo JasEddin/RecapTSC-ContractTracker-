@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using OpenApi.ContractGuard.Comparison.enums;
 
 namespace ContractChecker.Core.Models
 {
     public class ApplicationInfo
     {
-        public string Id { get; set; }=default!;
+        public ChangeImpact ChangeImpact { get; set; } = ChangeImpact.Informational;
+
         public string Name { get; set; } = default!;
     }
 }

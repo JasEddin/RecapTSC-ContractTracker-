@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
 type Application = {
-  id: string;
+  changeImpact:0|1;
   name: string;
 }
 
@@ -43,7 +43,7 @@ function App() {
   useEffect(() => {
     if (selectedApp) {
       document.title = `${selectedApp.name} - OpenAPI Contract Tracker`;
-      fetch(`http://localhost:5093/api/application/${selectedApp.id}`)
+      fetch(`http://localhost:5093/api/application/${selectedApp.name}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to load application details");
           return res.json();
@@ -75,8 +75,8 @@ function App() {
               <div className="app-list">
                 {applications.map((app, index) => (
                   <div
-                    key={app.id}
-                    className="app-card slide-up"
+                    key={app.name}
+                    className={`app-card slide-up ${app.changeImpact === 1 ? "critical" : ""}`} 
                     style={{ animationDelay: `${index * 60}ms` }}
                     onClick={() => setSelectedApp(app)}
                   >
@@ -101,7 +101,7 @@ function App() {
               <div className="sidebar-list">
                 {applications.map((app) => (
                   <div
-                    key={app.id}
+                    key={app.name}
                     className={`sidebar-item ${selectedApp === app ? "active" : ""
                       }`}
                     onClick={() => setSelectedApp(app)}
