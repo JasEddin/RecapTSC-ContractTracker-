@@ -1,4 +1,4 @@
-﻿using ContractChecker.Core;
+﻿using ContractChecker.Core.Proccor;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -11,6 +11,8 @@ builder.Services.AddSwaggerGen();
 // 🔹 Register your Core service
 builder.Services.AddTransient<IOpenApiLoader, OpenApiLoader>();
 builder.Services.AddSingleton<IApplicationProvider, ApplicationProvider>();
+builder.Services.AddSingleton<IContractFileProvider, ContractFileProvider>();
+
 builder.Services.AddHealthChecks();
 builder.Services.AddCors(options =>
 {
@@ -37,10 +39,10 @@ app.UseHttpsRedirection();
 
 app.MapHealthChecks("/health");
 
-app.MapGet("/api/applications", async (IApplicationProvider provider) =>
+app.MapGet("/api/applications", async (IApplicationProvider provider, IContractFileProvider contractFileProvider) =>
 {
+    contractFileProvider.LoadAllA();
     var result = await provider.GetApplicationsAsync();
-
     return Results.Ok(result);
 });
 
