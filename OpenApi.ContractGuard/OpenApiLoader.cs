@@ -30,16 +30,21 @@ public class OpenApiLoader : IOpenApiLoader
         return document;
     }
 
-    public async Task<OpenApiDocument> LoadFromUrlAsync(string url)
+    public async Task<OpenApiDocument> LoadFromUrlAsync(IEnumerable<string> urls)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            throw new ArgumentException("Url must not be empty.", nameof(url));
+         // if the urks is empty
+            if ( !urls.Any() )         
+            throw new ArgumentException("Url must not be empty.", nameof(urls));
 
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            throw new ArgumentException("Invalid URL format.", nameof(url));
+
+        // extract only valid urls from the list
+
+        List<Uri> validUrls = await ValidateUrlsAsync(urls).ConfigureAwait(false);
+
+
 
         using var httpClient = new HttpClient();
-        using var response = await httpClient.GetAsync(uri);
+        using var response = await httpClient.GetAsync(validUrls.First());
 
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException(
@@ -61,5 +66,58 @@ public class OpenApiLoader : IOpenApiLoader
             throw new InvalidOperationException("Failed to parse OpenAPI document.");
 
         return document;
+    }
+
+
+
+
+    public async Task<List<Uri>> ValidateUrlsAsync(IEnumerable<string> urlss)
+    {
+        var urls = new[] { "https://rsia.u3.skandianet.org/riskbedomning.rest","https://rest.u4.skandianet.org/insuranceprotect/"};
+
+        if (urls == null || !urls.Any())
+            throw new ArgumentException("URL list must not be empty.", nameof(urls));
+
+        var validUris = new List<Uri>();
+
+        using var httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(5)
+        };
+
+        foreach (var url in urls)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                continue;
+
+            if (!IsValidAbsoluteUrl(url, out var uri))
+                continue;
+
+            var reachable = await IsReachableAsync(httpClient, uri);
+            if (reachable)
+                validUris.Add(uri);
+        }
+
+        return validUris;
+    }
+
+    private static async Task<bool> IsReachableAsync(HttpClient httpClient, Uri uri)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Head, uri);
+            using var response = await httpClient.SendAsync(request);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    private static bool IsValidAbsoluteUrl(string url, out Uri uri)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out uri)
+               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 }

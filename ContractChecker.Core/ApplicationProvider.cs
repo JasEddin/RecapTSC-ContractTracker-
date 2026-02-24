@@ -1,4 +1,5 @@
 ﻿using ContractChecker.Core.Models;
+using ContractChecker.Core.Proccor;
 using Microsoft.Extensions.Configuration;
 using OpenApi.ContractGuard.Comparison;
 using OpenApi.ContractGuard.Comparison.enums;
@@ -10,13 +11,15 @@ public class ApplicationProvider : IApplicationProvider
     private bool _initialized;
 
     private IOpenApiLoader _openApiLoader;
+    private IContractFileProvider _contractFileProvider;
 
-    public IConfiguration _configuration { get; }
+    //public IConfiguration _configuration { get; }
 
-    public ApplicationProvider(IConfiguration configuration, IOpenApiLoader openApiLoader)
+    public ApplicationProvider(  IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider)
     {
         _openApiLoader = openApiLoader;
-        _configuration = configuration;
+        _contractFileProvider = contractFileProvider;
+       
     }
 
     public async Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync()
@@ -51,24 +54,20 @@ public class ApplicationProvider : IApplicationProvider
 
     async Task ExtractChangesAsync()
     {
-        var trackedApis = _configuration.GetSection("TrackedApis").GetChildren();
-        foreach (var ApiSection in trackedApis)
+        var allFilesContracts = _contractFileProvider.LoadAllA();
+
+        foreach (var fc in allFilesContracts)
         {
-            var apiName = ApiSection.Key;
+            var apiName = fc.Name;
 
-            var apiConfig = ApiSection.Get<TrackedApiConfig>();
+                var file1 = await _openApiLoader.LoadFromUrlAsync( fc.Servers  ).ConfigureAwait(false);
 
-            if (apiConfig != null)
-            {
-                var file1 = await _openApiLoader.LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
-
-                var file2 = _openApiLoader.LoadFromPath(apiConfig.LocalContractPath);
+                var file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
 
                 var comparer = new OpenApiComparer();
                 List<ContractChange> changes = comparer.Compare(file1, file2);
 
-                _apiAnddChanges.Add(apiName, (apiConfig.Url, apiConfig.LocalContractPath, changes));
-            }
+                _apiAnddChanges.Add(apiName, (fc.Servers[0], fc.FilePathinApisFolder , changes));
         }
         _initialized = true;
     }

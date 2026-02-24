@@ -41,7 +41,7 @@ app.MapHealthChecks("/health");
 
 app.MapGet("/api/applications", async (IApplicationProvider provider, IContractFileProvider contractFileProvider) =>
 {
-    contractFileProvider.LoadAllA();
+
     var result = await provider.GetApplicationsAsync();
     return Results.Ok(result);
 });

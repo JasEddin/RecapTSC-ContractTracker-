@@ -8,6 +8,7 @@ namespace ContractChecker.Core.Models
     {
         public string Name { get; set; }
         public string FilePathinApisFolder { get; set; }
+        public int LatestVersion { get; set; }
         public string[] Servers { get; set; }
     }
 }

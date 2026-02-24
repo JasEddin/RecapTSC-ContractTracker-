@@ -3,5 +3,5 @@
 public interface IOpenApiLoader
 {
     OpenApiDocument LoadFromPath(string path);
-    Task<OpenApiDocument> LoadFromUrlAsync(string url);
+    Task<OpenApiDocument> LoadFromUrlAsync(IEnumerable<string> url);
 }

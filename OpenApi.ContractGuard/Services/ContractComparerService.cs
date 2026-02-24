@@ -34,7 +34,7 @@ namespace OpenApi.ContractGuard.Services
                     if (apiConfig != null)
                     {
 
-                        var file1 = await new OpenApiLoader().LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
+                        var file1 = await new OpenApiLoader().LoadFromUrlAsync([apiConfig.Url]).ConfigureAwait(false);
 
                         var file2 = new OpenApiLoader().LoadFromPath(apiConfig.LocalContractPath);
 

@@ -49,12 +49,15 @@ namespace ContractChecker.Core.Proccor
                     .FullPath)
                 .ToList();
 
-            var contractFiles = files.Select(f => TryLoadContractFromOpenApisFile(f)).ToList();
+            List<ContractFile> contractFiles = files.Select(TryLoadContractFromOpenApiFile)
+                                                    .Where(cf => cf != null)
+                                                    .Cast<ContractFile>()
+                                                    .ToList();
             return contractFiles;   
         }
 
         // method to load a json file and extract the name and the server url from it, the json file has the following format:
-        private  ContractFile  TryLoadContractFromOpenApisFile (string filePath)
+        private  ContractFile? TryLoadContractFromOpenApiFile (string filePath)
         {
             try
             {
@@ -66,14 +69,17 @@ namespace ContractChecker.Core.Proccor
                 using var stream = File.OpenRead(filePath);
                 var reader = new OpenApiStreamReader();
                 var doc = reader.Read(stream, out var diagnostics);
-
+                
+                // change it ( sometimes the tittle is contains the version, we want to remove it) 
                 contractFile.Name = doc.Info.Title;
-
+                
                 contractFile.Servers = doc.Servers.Select(s => s.Url).ToArray();
+                
+                contractFile.LatestVersion = GetVersionFromParentFolder(filePath) ?? 0;
 
                 return contractFile;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
