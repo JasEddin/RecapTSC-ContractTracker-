@@ -49,7 +49,7 @@ namespace ContractChecker.Core.Proccor
                     .FullPath)
                 .ToList();
 
-            List<ContractFile> contractFiles = files.Select(TryLoadContractFromOpenApiFile)
+            List<ContractFile> contractFiles = latestFiles.Select(TryLoadContractFromOpenApiFile)
                                                     .Where(cf => cf != null)
                                                     .Cast<ContractFile>()
                                                     .ToList();
