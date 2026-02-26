@@ -1,6 +1,5 @@
-﻿using ContractChecker.Core.Models;
-using ContractChecker.Core.Proccor;
-using Microsoft.Extensions.Configuration;
+﻿using ContractChecker.Core.Caching;
+using ContractChecker.Core.Models;
 using OpenApi.ContractGuard.Comparison;
 using OpenApi.ContractGuard.Comparison.enums;
 
@@ -62,7 +61,7 @@ public class ApplicationProvider : IApplicationProvider
         {
             var apiName = fc.Name;
 
-            var file1 = await _openApiLoader.LoadFromUrlAsync(fc.Servers).ConfigureAwait(false);
+            var file1 = await _openApiLoader.LoadFromServerAsync(fc.Servers,fc.LatestVersion).ConfigureAwait(false);
 
             var file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
 
@@ -77,21 +76,22 @@ public class ApplicationProvider : IApplicationProvider
 
     async Task<Dictionary<string, Uri>> extractAllUrlsAsync(List<ContractFile> contractFiles)
     {
-        var result = new Dictionary<string, Uri>();
-        var noServer = new Dictionary<string, string[]>();
-        foreach (var fc in contractFiles)
-        {
-            var apiName = fc.Name;
-
-            Uri url = await _openApiLoader.ValidateUrlsAsync(fc.Servers).ConfigureAwait(false);
-            if (url != null)
+        
+            var result = new Dictionary<string, Uri>();
+            var noServer = new Dictionary<string, string[]>();
+            foreach (var fc in contractFiles)
             {
-                result.TryAdd(apiName, url);
-            }
-            else { noServer.TryAdd(apiName, fc.Servers); }
-        }
+                var apiName = fc.Name;
 
-        List<string> noServerValues = noServer.SelectMany(s => s.Value).ToList();
-        return result;  
-    }
+                Uri? url = await _openApiLoader.ValidateServersAsync(fc.Servers, fc.LatestVersion).ConfigureAwait(false);
+                if (url != null)
+                {
+                    result.TryAdd(apiName, url);
+                }
+                else { noServer.TryAdd(apiName, fc.Servers); }
+            }
+
+            List<string> noServerValues = noServer.SelectMany(s => s.Value).ToList();
+            return result;
+     }
 }

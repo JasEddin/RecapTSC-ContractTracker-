@@ -24,7 +24,6 @@ namespace OpenApi.ContractGuard.Services
         {
             try
             {
-
                 // Implementation for comparing contracts goes here
                 IEnumerable<IConfigurationSection> trackedApis = _config.GetSection("TrackedApis").GetChildren();
 
@@ -37,7 +36,7 @@ namespace OpenApi.ContractGuard.Services
                     if (apiConfig != null)
                     {
 
-                        var file1 = await _openApiLoader.LoadFromUrlAsync([apiConfig.Url]).ConfigureAwait(false);
+                        var file1 = await _openApiLoader.LoadFromUrlAsync(apiConfig.Url).ConfigureAwait(false);
 
                         var file2 =  _openApiLoader.LoadFromPath(apiConfig.LocalContractPath);
 
@@ -50,7 +49,6 @@ namespace OpenApi.ContractGuard.Services
 
                     }
                 }
-
             }
             catch (Exception ex)
             {
