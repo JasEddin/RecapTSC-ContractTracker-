@@ -20,7 +20,7 @@ namespace ContractChecker.Core.Proccor
                 folder
             );
         }
-        public List<ContractFile>  LoadAllA()
+        public List<ContractFile>  LoadAllLocalFiles()
         {
             if (!Directory.Exists(_contractsPath))
                 return [];

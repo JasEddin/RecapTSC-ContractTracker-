@@ -11,9 +11,12 @@ namespace OpenApi.ContractGuard.Services
 
         public Dictionary<string, List<ContractChange>> _ApiAndChanges = new();
 
-        public ContractComparerService(IConfiguration config)
+        public IOpenApiLoader _openApiLoader { get; }
+
+        public ContractComparerService(IConfiguration config, IOpenApiLoader openApiLoader)
         {
             _config = config;
+            _openApiLoader = openApiLoader;
         }
 
 
@@ -34,9 +37,9 @@ namespace OpenApi.ContractGuard.Services
                     if (apiConfig != null)
                     {
 
-                        var file1 = await new OpenApiLoader().LoadFromUrlAsync([apiConfig.Url]).ConfigureAwait(false);
+                        var file1 = await _openApiLoader.LoadFromUrlAsync([apiConfig.Url]).ConfigureAwait(false);
 
-                        var file2 = new OpenApiLoader().LoadFromPath(apiConfig.LocalContractPath);
+                        var file2 =  _openApiLoader.LoadFromPath(apiConfig.LocalContractPath);
 
                         var comparer = new OpenApiComparer();
                         List<ContractChange> changes = comparer.Compare(file1, file2);

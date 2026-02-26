@@ -15,11 +15,11 @@ public class ApplicationProvider : IApplicationProvider
 
     //public IConfiguration _configuration { get; }
 
-    public ApplicationProvider(  IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider)
+    public ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider)
     {
         _openApiLoader = openApiLoader;
         _contractFileProvider = contractFileProvider;
-       
+
     }
 
     public async Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync()
@@ -54,21 +54,44 @@ public class ApplicationProvider : IApplicationProvider
 
     async Task ExtractChangesAsync()
     {
-        var allFilesContracts = _contractFileProvider.LoadAllA();
+        List<ContractFile> allFilesContracts = _contractFileProvider.LoadAllLocalFiles();
+
+        var test =  await extractAllUrlsAsync(allFilesContracts);
 
         foreach (var fc in allFilesContracts)
         {
             var apiName = fc.Name;
 
-                var file1 = await _openApiLoader.LoadFromUrlAsync( fc.Servers  ).ConfigureAwait(false);
+            var file1 = await _openApiLoader.LoadFromUrlAsync(fc.Servers).ConfigureAwait(false);
 
-                var file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
+            var file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
 
-                var comparer = new OpenApiComparer();
-                List<ContractChange> changes = comparer.Compare(file1, file2);
+            var comparer = new OpenApiComparer();
+            List<ContractChange> changes = comparer.Compare(file1, file2);
 
-                _apiAnddChanges.Add(apiName, (fc.Servers[0], fc.FilePathinApisFolder , changes));
+            _apiAnddChanges.Add(apiName, (fc.Servers[0], fc.FilePathinApisFolder, changes));
         }
         _initialized = true;
+    }
+
+
+    async Task<Dictionary<string, Uri>> extractAllUrlsAsync(List<ContractFile> contractFiles)
+    {
+        var result = new Dictionary<string, Uri>();
+        var noServer = new Dictionary<string, string[]>();
+        foreach (var fc in contractFiles)
+        {
+            var apiName = fc.Name;
+
+            Uri url = await _openApiLoader.ValidateUrlsAsync(fc.Servers).ConfigureAwait(false);
+            if (url != null)
+            {
+                result.TryAdd(apiName, url);
+            }
+            else { noServer.TryAdd(apiName, fc.Servers); }
+        }
+
+        List<string> noServerValues = noServer.SelectMany(s => s.Value).ToList();
+        return result;  
     }
 }

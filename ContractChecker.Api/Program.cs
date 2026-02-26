@@ -13,6 +13,12 @@ builder.Services.AddTransient<IOpenApiLoader, OpenApiLoader>();
 builder.Services.AddSingleton<IApplicationProvider, ApplicationProvider>();
 builder.Services.AddSingleton<IContractFileProvider, ContractFileProvider>();
 
+builder.Services.AddHttpClient("OpenApiProbe", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(4);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("ContractChecker/1.0");
+});
+
 builder.Services.AddHealthChecks();
 builder.Services.AddCors(options =>
 {

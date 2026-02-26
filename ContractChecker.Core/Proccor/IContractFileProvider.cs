@@ -5,6 +5,6 @@ using System.Text;
 
 public interface IContractFileProvider
 {
-    public List<ContractFile> LoadAllA();
+    public List<ContractFile> LoadAllLocalFiles();
 }
 
