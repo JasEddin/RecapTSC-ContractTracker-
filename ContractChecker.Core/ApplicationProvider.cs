@@ -53,45 +53,82 @@ public class ApplicationProvider : IApplicationProvider
 
     async Task ExtractChangesAsync()
     {
+
         List<ContractFile> allFilesContracts = _contractFileProvider.LoadAllLocalFiles();
 
-        var test =  await extractAllUrlsAsync(allFilesContracts);
+        var appServerdict =  await ExtractAllValidServersAsync(allFilesContracts);
 
-        foreach (var fc in allFilesContracts)
+        // group by api name and compare contract files
+
+     
+        IEnumerable<ContractFile> contractfilesWithValidServers = from fc in allFilesContracts
+                                        join kvp in appServerdict on fc.Name equals kvp.Key
+                                        select new ContractFile
+                                        {
+                                            Name = fc.Name,
+                                            FilePathinApisFolder = fc.FilePathinApisFolder,
+                                            LatestVersion = fc.LatestVersion,
+                                            Servers = fc.Servers, 
+                                        };
+        // here already we can return the method
+
+
+
+        foreach (var fc in contractfilesWithValidServers )
         {
-            var apiName = fc.Name;
+            //find the contract file for this api
 
-            var file1 = await _openApiLoader.LoadFromServerAsync(fc.Servers,fc.LatestVersion).ConfigureAwait(false);
+            var file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Servers[0], fc.LatestVersion).ConfigureAwait(false);
 
             var file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
 
             var comparer = new OpenApiComparer();
             List<ContractChange> changes = comparer.Compare(file1, file2);
 
-            _apiAnddChanges.Add(apiName, (fc.Servers[0], fc.FilePathinApisFolder, changes));
+            _apiAnddChanges.Add(fc.Name, (fc.Servers[0], fc.FilePathinApisFolder, changes));
         }
         _initialized = true;
     }
 
 
-    async Task<Dictionary<string, Uri>> extractAllUrlsAsync(List<ContractFile> contractFiles)
+    async Task<Dictionary<string, List<string>>> ExtractAllValidServersAsync(List<ContractFile> contractFiles)
     {
-        
-            var result = new Dictionary<string, Uri>();
-            var noServer = new Dictionary<string, string[]>();
-            foreach (var fc in contractFiles)
-            {
-                var apiName = fc.Name;
 
-                Uri? url = await _openApiLoader.ValidateServersAsync(fc.Servers, fc.LatestVersion).ConfigureAwait(false);
-                if (url != null)
-                {
-                    result.TryAdd(apiName, url);
-                }
-                else { noServer.TryAdd(apiName, fc.Servers); }
-            }
+        // 1️⃣ Try cache first
+        var cached = await UrlCacheStorage.LoadAsync();
 
-            List<string> noServerValues = noServer.SelectMany(s => s.Value).ToList();
-            return result;
-     }
+        if (cached != null)
+        {
+            return cached.AppValidUrl;
+        }
+
+        // 2️⃣ No cache → compute
+        var result = new Dictionary<string, List<string>>();
+        var noServer = new Dictionary<string, string[]>();
+
+        foreach (var fc in contractFiles)
+        {
+            var apiName = fc.Name;
+
+            List<string> urls = await _openApiLoader.ValidateServersAsync(fc.Servers)
+                                           .ConfigureAwait(false);
+
+            if (urls.Any())
+                result[apiName] = urls;
+            else
+                noServer[apiName] = fc.Servers;
+        }
+
+        // 3️⃣ Save to cache
+        var cache = new UrlValidationCache
+        {
+            AppValidUrl = result,
+            NoServer = noServer,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+        await UrlCacheStorage.SaveAsync(cache);
+
+        return result;
+
+    }
 }

@@ -36,18 +36,19 @@ public class OpenApiLoader : IOpenApiLoader
         return document;
     }
 
-    public async Task<Uri?> ValidateServersAsync(IEnumerable<string> urls, int latestVersion)
+    public async Task<List<string>> ValidateServersAsync(IEnumerable<string> urls)
     {
         var suffixes = new[] {
            //"/swagger/v1.0/swagger.json", 
-           $"/openapi/v{latestVersion}/openapi.json",
+           //$"/openapi/v{latestVersion}/openapi.json",
            //"/openapi/v1.0/openapi.json", check it later
+           "/swagger/index.html"
         };
 
         if (urls == null || !urls.Any())
             throw new ArgumentException("URL list must not be empty.", nameof(urls));
 
-        var validUris = new List<Uri>();
+        var validServers = new List<string>();
         var client = _httpClientFactory.CreateClient("OpenApiProbe");
 
         foreach (var url in urls)
@@ -55,36 +56,69 @@ public class OpenApiLoader : IOpenApiLoader
             
             foreach(var suffix in suffixes)
             {
-                var testUrl = url + suffix;
-                if (string.IsNullOrWhiteSpace(testUrl))
+                var swaggerLink = url + suffix;
+                if (string.IsNullOrWhiteSpace(swaggerLink))
                     continue;
 
-                if (!IsValidAbsoluteUrl(testUrl, out var uri))
+                if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
                     continue;
 
                 var reachable = await IsReachableAsync(client, uri);
                 if (reachable)
-                    validUris.Add(uri);
+                    validServers.Add(url);
             }
         }
 
-        return validUris.LastOrDefault();
+        return validServers;
     }
 
-    public async Task<OpenApiDocument> LoadFromServerAsync(IEnumerable<string> urls, int latestVersion)
-    {
+    //public async Task<OpenApiDocument> LoadFromServerAsync(IEnumerable<string> urls, int latestVersion)
+    //{
  
+    //    // if the urls is empty
+    //    if (!urls.Any())
+    //        throw new ArgumentException("Url must not be empty.", nameof(urls));
+
+    //    // extract only valid urls from the list
+    //    var validUrl = await ValidateServersAsync(urls).ConfigureAwait(false);
+
+    //    using var httpClient = new HttpClient();
+ 
+    //    using var response = await httpClient.GetAsync(validUrl);
+
+    //    if (!response.IsSuccessStatusCode)
+    //        throw new InvalidOperationException(
+    //            $"Failed to download OpenAPI document. Status: {response.StatusCode}");
+
+    //    using var stream = await response.Content.ReadAsStreamAsync();
+    //    var reader = new OpenApiStreamReader();
+
+    //    var document = reader.Read(stream, out var diagnostics);
+
+    //    if (diagnostics.Errors.Any())
+    //    {
+    //        throw new InvalidOperationException(
+    //            "Invalid OpenAPI document:" + Environment.NewLine +
+    //            string.Join(Environment.NewLine, diagnostics.Errors.Select(e => e.Message)));
+    //    }
+
+    //    if (document is null)
+    //        throw new InvalidOperationException("Failed to parse OpenAPI document.");
+
+    //    return document;
+    //}
+
+    public async Task<OpenApiDocument> LoadFromValidServerAsync(string serverUrl, int latestVersion)
+    {
+        // try catch
         // if the urks is empty
-        if (!urls.Any())
-            throw new ArgumentException("Url must not be empty.", nameof(urls));
+        if (string.IsNullOrWhiteSpace(serverUrl))
+            throw new ArgumentException("Url must not be empty.", nameof(serverUrl));
 
-
-        // extract only valid urls from the list
-
-        var validUrl = await ValidateServersAsync(urls, latestVersion).ConfigureAwait(false);
+        var validUrl = serverUrl +  $"//openapi/v{latestVersion}/openapi.json";
 
         using var httpClient = new HttpClient();
- 
+
         using var response = await httpClient.GetAsync(validUrl);
 
         if (!response.IsSuccessStatusCode)
