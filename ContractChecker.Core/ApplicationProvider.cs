@@ -1,10 +1,12 @@
 ﻿using ContractChecker.Core.Caching;
 using ContractChecker.Core.Models;
+using Microsoft.OpenApi.Models;
 using OpenApi.ContractGuard.Comparison;
 using OpenApi.ContractGuard.Comparison.enums;
 
 public class ApplicationProvider : IApplicationProvider
 {
+    // Todo: make type ViewModel, add errors to it
     public Dictionary<string, (string url, string localContractPath, List<ContractChange> changes)> _apiAnddChanges = [];
 
     private bool _initialized;
@@ -59,8 +61,6 @@ public class ApplicationProvider : IApplicationProvider
         var appServerdict =  await ExtractAllValidServersAsync(allFilesContracts);
 
         // group by api name and compare contract files
-
-     
         IEnumerable<ContractFile> contractfilesWithValidServers = from fc in allFilesContracts
                                         join kvp in appServerdict on fc.Name equals kvp.Key
                                         select new ContractFile
@@ -70,22 +70,32 @@ public class ApplicationProvider : IApplicationProvider
                                             LatestVersion = fc.LatestVersion,
                                             Servers = fc.Servers, 
                                         };
-        // here already we can return the method
+        // Todo:  here already we return the method
 
 
 
         foreach (var fc in contractfilesWithValidServers )
         {
-            //find the contract file for this api
+            // Todo: if there are multiple valid servers, we should decide which one to use, for now we take the first one
+            OpenApiDocument? file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Servers[0], fc.LatestVersion).ConfigureAwait(false);
 
-            var file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Servers[0], fc.LatestVersion).ConfigureAwait(false);
+            OpenApiDocument? file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
+            if (file1 != null && file2 != null)
+            {
+                var comparer = new OpenApiComparer();
+                List<ContractChange> changes = comparer.Compare(file1, file2);
 
-            var file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
+                if (!_apiAnddChanges.TryAdd(fc.Name, (fc.Servers[0], fc.FilePathinApisFolder, changes)))
+                {
+                    Console.WriteLine($"Warning: Duplicate API name '{fc.Name}' found. Skipping.");
 
-            var comparer = new OpenApiComparer();
-            List<ContractChange> changes = comparer.Compare(file1, file2);
-
-            _apiAnddChanges.Add(fc.Name, (fc.Servers[0], fc.FilePathinApisFolder, changes));
+                }
+            }
+            else
+            {
+                Console.WriteLine($"couldnt reach open API file from the server {fc.Servers[0]}' for the API: {fc.Name}.");
+            }
+            // Todo: if not ?? add error to the model and show it in the UI
         }
         _initialized = true;
     }
