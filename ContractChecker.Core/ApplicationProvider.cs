@@ -76,8 +76,7 @@ public class ApplicationProvider : IApplicationProvider
 
         foreach (var fc in contractfilesWithValidServers )
         {
-            // Todo: if there are multiple valid servers, we should decide which one to use, for now we take the first one
-            OpenApiDocument? file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Servers[0], fc.LatestVersion).ConfigureAwait(false);
+            OpenApiDocument? file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Servers, fc.LatestVersion).ConfigureAwait(false);
 
             OpenApiDocument? file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
             if (file1 != null && file2 != null)

@@ -142,57 +142,61 @@ public class OpenApiLoader : IOpenApiLoader
     //}
 
     public async Task<OpenApiDocument?> LoadFromValidServerAsync(
-     string serverUrl,
+     string[] servers,
      int latestVersion)
     {
-        if (string.IsNullOrWhiteSpace(serverUrl))
-            return null;
+        while (servers.Any())
+        { 
+            var serverUrl = servers.First();
+            servers = servers.Skip(1).ToArray();
 
-        var candidateUrls = new[]
-        { $"{serverUrl}/openapi/v{latestVersion}/openapi.json",
-        $"{serverUrl}/swagger/v{latestVersion}/swagger.json" };
-        //  $"{serverUrl}//openapi.json" (2 träff) , we can add it later if needed
-        //openapi/v{latestVersion}.json (1 träff)  
+            var candidateUrls = new[]
+            { $"{serverUrl}/openapi/v{latestVersion}/openapi.json",
+             $"{serverUrl}/swagger/v{latestVersion}/swagger.json" };
+            //  $"{serverUrl}//openapi.json" (2 träff) , we can add it later if needed
+            //openapi/v{latestVersion}.json (1 träff)  
 
-        using var httpClient = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(3)
-        };
-
-        foreach (var url in candidateUrls)
-        {
-            try
+            using var httpClient = new HttpClient
             {
-                using var response = await httpClient.GetAsync(url);
+                Timeout = TimeSpan.FromSeconds(3)
+            };
 
-                if (!response.IsSuccessStatusCode)
+            foreach (var url in candidateUrls)
+            {
+                try
                 {
-                    Console.WriteLine($"[WARN] {url} returned {response.StatusCode}");
-                    continue;
+                    using var response = await httpClient.GetAsync(url);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"[WARN] {url} returned {response.StatusCode}");
+                        continue;
+                    }
+
+                    using var stream = await response.Content.ReadAsStreamAsync();
+                    var reader = new OpenApiStreamReader();
+
+                    var document = reader.Read(stream, out var diagnostics);
+
+                    if (diagnostics.Errors.Any())
+                    {
+                        Console.WriteLine($"[WARN] Invalid OpenAPI document at {url}");
+                        continue;
+                    }
+
+                    Console.WriteLine($"[INFO] Successfully loaded OpenAPI from {url}");
+                    return document;
                 }
 
-                using var stream = await response.Content.ReadAsStreamAsync();
-                var reader = new OpenApiStreamReader();
-
-                var document = reader.Read(stream, out var diagnostics);
-
-                if (diagnostics.Errors.Any())
+                catch (Exception)
                 {
-                    Console.WriteLine($"[WARN] Invalid OpenAPI document at {url}");
-                    continue;
+
                 }
-
-                Console.WriteLine($"[INFO] Successfully loaded OpenAPI from {url}");
-                return document;
             }
-
-            catch (Exception)
-            {
-
-            }
+            Console.WriteLine($"[ERROR] No valid OpenAPI endpoint found for {serverUrl}");
+            continue;
         }
-        Console.WriteLine($"[ERROR] No valid OpenAPI endpoint found for {serverUrl}");
-        return null;
+            return null;
     }
 
     public async Task<OpenApiDocument> LoadFromUrlAsync(string url)
