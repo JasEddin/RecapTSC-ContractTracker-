@@ -2,8 +2,8 @@
 {
     public class UrlValidationCache
     {
-        public Dictionary<string, List<string>> AppValidUrl { get; set; } = new Dictionary<string, List<string>>();
-        public Dictionary<string, string[]> NoServer { get; set; } = [];
+        public Dictionary<string, List<string>> ValidServers { get; set; } = new Dictionary<string, List<string>>();
+        public Dictionary<string, string[]> UnvalidServers { get; set; } = [];
         public DateTime CreatedAtUtc { get; set; }
     }
 }

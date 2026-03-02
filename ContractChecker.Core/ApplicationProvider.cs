@@ -108,12 +108,12 @@ public class ApplicationProvider : IApplicationProvider
 
         if (cached != null)
         {
-            return cached.AppValidUrl;
+            return cached.ValidServers;
         }
 
         // 2️⃣ No cache → compute
         var result = new Dictionary<string, List<string>>();
-        var noServer = new Dictionary<string, string[]>();
+        var unvalidServers = new Dictionary<string, string[]>();
 
         foreach (var fc in contractFiles)
         {
@@ -125,14 +125,14 @@ public class ApplicationProvider : IApplicationProvider
             if (urls.Any())
                 result[apiName] = urls;
             else
-                noServer[apiName] = fc.Servers;
+                unvalidServers[apiName] = fc.Servers;
         }
 
         // 3️⃣ Save to cache
         var cache = new UrlValidationCache
         {
-            AppValidUrl = result,
-            NoServer = noServer,
+            ValidServers = result,
+            UnvalidServers = unvalidServers,
             CreatedAtUtc = DateTime.UtcNow
         };
         await UrlCacheStorage.SaveAsync(cache);
