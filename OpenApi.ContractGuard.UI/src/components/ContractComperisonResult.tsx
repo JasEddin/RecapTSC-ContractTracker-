@@ -1,12 +1,28 @@
 import type { ApplicationDetails } from "../App";
+import swaggerIcon from "../assets/swagger-icon.svg";
 
-
-export function ContractComparisonResult({ changes, name, url, localContractPath }: ApplicationDetails) { 
- const breakingChanges = changes.filter(change => change.impact === 1);
- const informationalChanges = changes.filter(change => change.impact === 0);
+export function ContractComparisonResult({ changes, name, url, localContractPath }: ApplicationDetails) {
+  const breakingChanges = changes.filter(change => change.impact === 1);
+  const informationalChanges = changes.filter(change => change.impact === 0);
   return (
-       <div className="result-card">
+    <div className="result-card">
       <h2>{name} – Contract Comparison</h2>
+      <div className="floating-actions">
+        <button
+          className="floating-btn swagger-btn"
+          onClick={() => window.open(`${url}/swagger/index.html`, "_blank")}
+        >
+          <img src={swaggerIcon} alt="Swagger" className="swagger-icon" />
+          <span>Swagger UI</span>
+        </button>
+
+        <button
+          className="floating-btn local-btn"
+          onClick={() => window.open(`http://localhost:5093/api/open-with-vscode?path=${encodeURIComponent(localContractPath)}`, "_blank")}
+        >
+          📂 View Contract in Apis 
+        </button>
+      </div>
       {/* Breaking changes */}
       <div className="changes-section">
         <h3 className="breaking-title">

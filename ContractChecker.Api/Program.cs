@@ -1,4 +1,5 @@
-﻿using ContractChecker.Core.Proccor;
+﻿using ContractChecker.Core.Models;
+using ContractChecker.Core.Proccor;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -48,15 +49,31 @@ app.MapHealthChecks("/health");
 app.MapGet("/api/applications", async (IApplicationProvider provider, IContractFileProvider contractFileProvider) =>
 {
 
-    var result = await provider.GetApplicationsAsync();
+    IEnumerable<ApplicationInfo> result = await provider.GetApplicationsAsync();
     return Results.Ok(result);
 });
 
 
 app.MapGet("/api/application/{name}", async (IApplicationProvider provider, string name ) =>
 {
-    var result = await provider.GetApplicationAsync(name);
+    ApplicationDetail result = await provider.GetApplicationAsync(name);
     return Results.Ok(result);
 });
 
+app.MapGet("/api/open-with-vscode", (string path) =>
+{
+    if (!File.Exists(path))
+        return Results.NotFound();
+
+    var psi = new System.Diagnostics.ProcessStartInfo
+    {
+        FileName = "code", // VS Code CLI
+        Arguments = $"\"{path}\"",
+        UseShellExecute = true
+    };
+
+    System.Diagnostics.Process.Start(psi);
+
+    return Results.Ok();
+});
 app.Run();
