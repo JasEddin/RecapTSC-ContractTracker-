@@ -13,7 +13,7 @@ export function ContractComparisonResult({ changes, name, url, localContractPath
           onClick={() => window.open(`${url}/swagger/index.html`, "_blank")}
         >
           <img src={swaggerIcon} alt="Swagger" className="swagger-icon" />
-          <span>Swagger UI</span>
+          <span> Swagger </span>
         </button>
 
         <button

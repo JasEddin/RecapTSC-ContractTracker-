@@ -95,7 +95,7 @@ function App() {
             <aside className="sidebar">
               <div className="sidebar-header">
                 <img src={Logo} className="sidebar-logo" />
-                <span className="sidebar-title">Applications</span>
+                <span className="sidebar-title"> {`Applications (${applications.length})`} </span>
               </div>
 
               <div className="sidebar-list">
