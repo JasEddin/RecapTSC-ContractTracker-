@@ -25,7 +25,6 @@ namespace ContractChecker.Core.Proccor
             if (!Directory.Exists(_contractsPath))
                 return [];
 
-
             // 1. Find all json files (except settings.json)
             var files = Directory
                 .GetFiles(_contractsPath, "*.json", SearchOption.AllDirectories)

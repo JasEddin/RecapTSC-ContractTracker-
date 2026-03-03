@@ -83,12 +83,11 @@ public class ApplicationProvider : IApplicationProvider
                 if (!_apiAnddChanges.TryAdd(fc.Name, (fc.Server, fc.PathInApis, changes)))
                 {
                     Console.WriteLine($"Warning: Duplicate API name '{fc.Name}' found. Skipping.");
-
                 }
             }
             else
             {
-                Console.WriteLine($"couldnt reach open API file from the server {fc.Server[0]}' for the API: {fc.Name}.");
+                Console.WriteLine($"couldnt reach open API file from the server {fc.Server}' for the API: {fc.Name}.");
             }
             // Todo: if not ?? add error to the model and show it in the UI
         }

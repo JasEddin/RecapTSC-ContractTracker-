@@ -8,6 +8,10 @@ var builder = Host.CreateApplicationBuilder(args);
 
 // configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: false);
+builder.Services.AddHttpClient("OpenApiProbe", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(3);
+});
 
 // DI registrations
 builder.Services.AddSingleton<IOpenApiLoader, OpenApiLoader>();
