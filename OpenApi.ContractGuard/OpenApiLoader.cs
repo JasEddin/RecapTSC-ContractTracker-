@@ -152,7 +152,7 @@ public class OpenApiLoader : IOpenApiLoader
             return null;
         }
 
-        server = server.Replace("$(environment)", $".{EnvironmentOFServer}.");
+        //server = server.Replace("$(environment)", $".{EnvironmentOFServer}.");
         var candidateUrls = new[]
             { $"{server}/openapi/v{latestVersion}/openapi.json",
              $"{server}/swagger/v{latestVersion}/swagger.json" };

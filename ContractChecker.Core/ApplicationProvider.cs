@@ -66,7 +66,7 @@ public class ApplicationProvider : IApplicationProvider
                                             Name = fc.Name,
                                             PathInApis = fc.PathInApis,
                                             LatestVersion = fc.LatestVersion,
-                                            Server = fc.Server, 
+                                            Server = kvp.Value, 
                                         };
         // Todo:  here already we return the method
 
