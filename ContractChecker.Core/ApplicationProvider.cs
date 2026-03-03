@@ -14,8 +14,6 @@ public class ApplicationProvider : IApplicationProvider
     private IOpenApiLoader _openApiLoader;
     private IContractFileProvider _contractFileProvider;
 
-    //public IConfiguration _configuration { get; }
-
     public ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider)
     {
         _openApiLoader = openApiLoader;
@@ -66,25 +64,23 @@ public class ApplicationProvider : IApplicationProvider
                                         select new ContractFile
                                         {
                                             Name = fc.Name,
-                                            FilePathinApisFolder = fc.FilePathinApisFolder,
+                                            PathInApis = fc.PathInApis,
                                             LatestVersion = fc.LatestVersion,
-                                            Servers = fc.Servers, 
+                                            Server = fc.Server, 
                                         };
         // Todo:  here already we return the method
 
-
-
         foreach (var fc in contractfilesWithValidServers )
         {
-            OpenApiDocument? file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Servers, fc.LatestVersion).ConfigureAwait(false);
+            OpenApiDocument? file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Server, fc.LatestVersion).ConfigureAwait(false);
 
-            OpenApiDocument? file2 = _openApiLoader.LoadFromPath(fc.FilePathinApisFolder);
+            OpenApiDocument? file2 = _openApiLoader.LoadFromPath(fc.PathInApis);
             if (file1 != null && file2 != null)
             {
                 var comparer = new OpenApiComparer();
                 List<ContractChange> changes = comparer.Compare(file1, file2);
 
-                if (!_apiAnddChanges.TryAdd(fc.Name, (fc.Servers[0], fc.FilePathinApisFolder, changes)))
+                if (!_apiAnddChanges.TryAdd(fc.Name, (fc.Server, fc.PathInApis, changes)))
                 {
                     Console.WriteLine($"Warning: Duplicate API name '{fc.Name}' found. Skipping.");
 
@@ -92,7 +88,7 @@ public class ApplicationProvider : IApplicationProvider
             }
             else
             {
-                Console.WriteLine($"couldnt reach open API file from the server {fc.Servers[0]}' for the API: {fc.Name}.");
+                Console.WriteLine($"couldnt reach open API file from the server {fc.Server[0]}' for the API: {fc.Name}.");
             }
             // Todo: if not ?? add error to the model and show it in the UI
         }
@@ -100,11 +96,11 @@ public class ApplicationProvider : IApplicationProvider
     }
 
 
-    async Task<Dictionary<string, List<string>>> ExtractAllValidServersAsync(List<ContractFile> contractFiles)
+    async Task<Dictionary<string, string>> ExtractAllValidServersAsync(List<ContractFile> contractFiles)
     {
 
-        // 1️⃣ Try cache first
-        var cached = await UrlCacheStorage.LoadAsync();
+        //1️⃣ Try cache first
+       var cached = await UrlCacheStorage.LoadAsync();
 
         if (cached != null)
         {
@@ -112,20 +108,25 @@ public class ApplicationProvider : IApplicationProvider
         }
 
         // 2️⃣ No cache → compute
-        var result = new Dictionary<string, List<string>>();
-        var unvalidServers = new Dictionary<string, string[]>();
+        var result = new Dictionary<string, string>();
+        var unvalidServers = new Dictionary<string, string>();
 
         foreach (var fc in contractFiles)
         {
-            var apiName = fc.Name;
+            if (string.IsNullOrWhiteSpace(fc.Server))
+                continue;
 
-            List<string> urls = await _openApiLoader.ValidateServersAsync(fc.Servers)
+            var apiName = fc.Name;
+            if (string.IsNullOrWhiteSpace(apiName))
+                continue;
+            
+            List<string> urls = await _openApiLoader.ValidateServerAsync(fc.Server)
                                            .ConfigureAwait(false);
 
-            if (urls.Any())
-                result[apiName] = urls;
+            if (urls.Count != 0 && urls.FirstOrDefault() != null)
+                result[apiName] = urls.First();
             else
-                unvalidServers[apiName] = fc.Servers;
+                unvalidServers[apiName] = fc.Server;
         }
 
         // 3️⃣ Save to cache

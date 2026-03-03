@@ -3,6 +3,8 @@ using Microsoft.OpenApi.Readers;
 
 public class OpenApiLoader : IOpenApiLoader
 {
+    private const string EnvironmentOFServer = "u3";
+
     private readonly IHttpClientFactory _httpClientFactory;
 
     public OpenApiLoader(IHttpClientFactory httpClientFactory)
@@ -69,7 +71,7 @@ public class OpenApiLoader : IOpenApiLoader
         }
     }
 
-    public async Task<List<string>> ValidateServersAsync(IEnumerable<string> urls)
+    public async Task<List<string>> ValidateServerAsync(string url)
     {
         var suffixes = new[] {
            //"/swagger/v1.0/swagger.json", 
@@ -78,28 +80,27 @@ public class OpenApiLoader : IOpenApiLoader
            "/swagger/index.html"
         };
 
-        if (urls == null || !urls.Any())
-            throw new ArgumentException("URL list must not be empty.", nameof(urls));
+        // we need to replace the environment variable with the actual value
+        url = url.Replace("$(environment)", $".{EnvironmentOFServer}.");
+
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
 
         var validServers = new List<string>();
         var client = _httpClientFactory.CreateClient("OpenApiProbe");
 
-        foreach (var url in urls)
+        foreach (var suffix in suffixes)
         {
+            var swaggerLink = url + suffix;
+            if (string.IsNullOrWhiteSpace(swaggerLink))
+                continue;
 
-            foreach (var suffix in suffixes)
-            {
-                var swaggerLink = url + suffix;
-                if (string.IsNullOrWhiteSpace(swaggerLink))
-                    continue;
+            if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
+                continue;
 
-                if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
-                    continue;
-
-                var reachable = await IsReachableAsync(client, uri);
-                if (reachable)
-                    validServers.Add(url);
-            }
+            var reachable = await IsReachableAsync(client, uri);
+            if (reachable)
+                validServers.Add(url);
         }
 
         return validServers;
@@ -142,61 +143,61 @@ public class OpenApiLoader : IOpenApiLoader
     //}
 
     public async Task<OpenApiDocument?> LoadFromValidServerAsync(
-     string[] servers,
+     string server,
      int latestVersion)
     {
-        while (servers.Any())
-        { 
-            var serverUrl = servers.First();
-            servers = servers.Skip(1).ToArray();
-
-            var candidateUrls = new[]
-            { $"{serverUrl}/openapi/v{latestVersion}/openapi.json",
-             $"{serverUrl}/swagger/v{latestVersion}/swagger.json" };
-            //  $"{serverUrl}//openapi.json" (2 träff) , we can add it later if needed
-            //openapi/v{latestVersion}.json (1 träff)  
-
-            using var httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(3)
-            };
-
-            foreach (var url in candidateUrls)
-            {
-                try
-                {
-                    using var response = await httpClient.GetAsync(url);
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"[WARN] {url} returned {response.StatusCode}");
-                        continue;
-                    }
-
-                    using var stream = await response.Content.ReadAsStreamAsync();
-                    var reader = new OpenApiStreamReader();
-
-                    var document = reader.Read(stream, out var diagnostics);
-
-                    if (diagnostics.Errors.Any())
-                    {
-                        Console.WriteLine($"[WARN] Invalid OpenAPI document at {url}");
-                        continue;
-                    }
-
-                    Console.WriteLine($"[INFO] Successfully loaded OpenAPI from {url}");
-                    return document;
-                }
-
-                catch (Exception)
-                {
-
-                }
-            }
-            Console.WriteLine($"[ERROR] No valid OpenAPI endpoint found for {serverUrl}");
-            continue;
-        }
+        if (string.IsNullOrWhiteSpace(server))
+        {
+            Console.WriteLine("[WARN] Server URL is empty.");
             return null;
+        }
+
+        server = server.Replace("$(environment)", $".{EnvironmentOFServer}.");
+        var candidateUrls = new[]
+            { $"{server}/openapi/v{latestVersion}/openapi.json",
+             $"{server}/swagger/v{latestVersion}/swagger.json" };
+        //  $"{serverUrl}//openapi.json" (2 träff) , we can add it later if needed
+        //openapi/v{latestVersion}.json (1 träff)  
+
+        using var httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(3)
+        };
+
+        foreach (var url in candidateUrls)
+        {
+            try
+            {
+                using var response = await httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[WARN] {url} returned {response.StatusCode}");
+                    continue;
+                }
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+                var reader = new OpenApiStreamReader();
+
+                var document = reader.Read(stream, out var diagnostics);
+
+                if (diagnostics.Errors.Any())
+                {
+                    Console.WriteLine($"[WARN] Invalid OpenAPI document at {url}");
+                    continue;
+                }
+
+                Console.WriteLine($"[INFO] Successfully loaded OpenAPI from {url}");
+                return document;
+            }
+
+            catch (Exception)
+            {
+
+            }
+        }
+        Console.WriteLine($"[ERROR] No valid OpenAPI endpoint found for {server}");
+        return null;
     }
 
     public async Task<OpenApiDocument> LoadFromUrlAsync(string url)

@@ -7,8 +7,8 @@ namespace ContractChecker.Core.Models
     public class ContractFile
     {
         public string Name { get; set; }
-        public string FilePathinApisFolder { get; set; }
+        public string PathInApis { get; set; }
         public int LatestVersion { get; set; }
-        public string[] Servers { get; set; }
+        public string Server { get; set; }
     }
 }

@@ -6,6 +6,6 @@ public interface IOpenApiLoader
     Task<OpenApiDocument> LoadFromUrlAsync(string url);
 
     //Task<OpenApiDocument> LoadFromServerAsync(IEnumerable<string> url, int latestVersion);
-    Task<OpenApiDocument?>  LoadFromValidServerAsync(string[] serverUrls, int latestVersion);
-    Task<List<string>> ValidateServersAsync(IEnumerable<string> urls);
+    Task<OpenApiDocument?> LoadFromValidServerAsync(string server, int latestVersion);
+    Task<List<string>> ValidateServerAsync(string url);
 }
