@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Readers;
 using System.Text.RegularExpressions;
 
-namespace ContractChecker.Core.Proccor
+namespace ContractChecker.Core.Processor
 {
     public class ContractFileProvider : IContractFileProvider
     {
@@ -48,10 +48,10 @@ namespace ContractChecker.Core.Proccor
                     .FullPath)
                 .ToList();
 
-            List<ContractFile> contractFiles = latestFiles.Select(TryLoadContractFromOpenApiFile)
-                                                   .Where(cf => cf != null)
-                                                   .Cast<ContractFile>()
-                                                   .ToList();
+            var contractFiles = latestFiles
+                .Select(TryLoadContractFromOpenApiFile)
+                .OfType<ContractFile>()
+                .ToList();
             return contractFiles;
         }
 
@@ -70,7 +70,16 @@ namespace ContractChecker.Core.Proccor
                 var doc = reader.Read(stream, out var diagnostics);
 
                 // change it ( sometimes the tittle is contains the version, we want to remove it) 
-                contractFile.Name = doc.Info.Title;
+                contractFile.Name = doc.Info?.Title?? "Unknown";
+
+                var nameOfTeam= NormalizeTeamName(doc.Info?.Contact?.Name?? null) ;
+                var mailOfTeam= doc.Info?.Contact?.Email?.Trim()?.ToLower()?? "Unknown";
+
+                contractFile.Team = new Team
+                {
+                    Name = nameOfTeam,
+                    Mail = mailOfTeam
+                };
 
                 // extract servers from Settings.Yaml 
                 contractFile.Server = GetServer(filePath);
@@ -119,6 +128,18 @@ namespace ContractChecker.Core.Proccor
             return match.Success
                 ? int.Parse(match.Groups[1].Value)
                 : null;
+        }
+        string NormalizeTeamName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return "Unknown";
+
+            name = name.Trim();
+
+            if (name.StartsWith("Team ", StringComparison.OrdinalIgnoreCase))
+                name = name.Substring(5);
+
+            return name.ToLowerInvariant();
         }
     }
 }

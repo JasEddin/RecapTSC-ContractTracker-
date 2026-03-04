@@ -1,5 +1,5 @@
 ﻿using ContractChecker.Core.Models;
-using ContractChecker.Core.Proccor;
+using ContractChecker.Core.Processor;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfigurationRoot configuration = new ConfigurationBuilder()
