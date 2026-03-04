@@ -7,5 +7,7 @@ namespace ContractChecker.Core.Models
         public ChangeImpact ChangeImpact { get; set; } = ChangeImpact.Informational;
 
         public string Name { get; set; } = default!;
+
+        public Team Team { get; set; }
     }
 }

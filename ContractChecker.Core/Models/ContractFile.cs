@@ -10,5 +10,13 @@ namespace ContractChecker.Core.Models
         public string PathInApis { get; set; }
         public int LatestVersion { get; set; }
         public string Server { get; set; }
+
+        public Team Team { get; set; }
+    }
+
+    public class Team
+    {
+        public string Name { get; set; }
+        public string Mail { get; set; }
     }
 }

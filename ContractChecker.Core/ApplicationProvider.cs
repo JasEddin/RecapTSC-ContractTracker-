@@ -7,10 +7,9 @@ using OpenApi.ContractGuard.Comparison.enums;
 public class ApplicationProvider : IApplicationProvider
 {
     // Todo: make type ViewModel, add errors to it
-    public Dictionary<string, (string url, string localContractPath, List<ContractChange> changes)> _apiAnddChanges = [];
 
+    public Dictionary<string, ApplicationDetail> ApplicationDetailDic { get; set; } = [];
     private bool _initialized;
-
     private IOpenApiLoader _openApiLoader;
     private IContractFileProvider _contractFileProvider;
 
@@ -29,7 +28,7 @@ public class ApplicationProvider : IApplicationProvider
         }
 
         // return a list of applications name and index 
-        var applicationChangeImpactList = _apiAnddChanges.Select(api => new ApplicationInfo { Name = api.Key, ChangeImpact = api.Value.changes.Any(c => c.Impact == ChangeImpact.ContractUpdateRequired) ? ChangeImpact.ContractUpdateRequired : ChangeImpact.Informational });
+        var applicationChangeImpactList = ApplicationDetailDic.Select( kvp => new ApplicationInfo { Name = kvp.Key, Team = kvp.Value.Team, ChangeImpact = kvp.Value.Changes.Any(c => c.Impact == ChangeImpact.ContractUpdateRequired) ? ChangeImpact.ContractUpdateRequired : ChangeImpact.Informational });
         return applicationChangeImpactList;
     }
 
@@ -40,15 +39,8 @@ public class ApplicationProvider : IApplicationProvider
             await ExtractChangesAsync();
         }
 
-        var (url, localContractPath, changes) = _apiAnddChanges[name];
-        return new ApplicationDetail
-        {
-            Name = name,
-            Url = url,
-            LocalContractPath = localContractPath,
-            Changes = changes
-        };
-
+      return  ApplicationDetailDic[name];
+ 
     }
 
     async Task ExtractChangesAsync()
@@ -67,6 +59,7 @@ public class ApplicationProvider : IApplicationProvider
                                             PathInApis = fc.PathInApis,
                                             LatestVersion = fc.LatestVersion,
                                             Server = kvp.Value, 
+                                            Team = fc.Team
                                         };
         // Todo:  here already we return the method
 
@@ -80,7 +73,7 @@ public class ApplicationProvider : IApplicationProvider
                 var comparer = new OpenApiComparer();
                 List<ContractChange> changes = comparer.Compare(file1, file2);
 
-                if (!_apiAnddChanges.TryAdd(fc.Name, (fc.Server, fc.PathInApis, changes)))
+                if (!ApplicationDetailDic.TryAdd(fc.Name, new ApplicationDetail {Name= fc.Name, Server = fc.Server, LocalContractPath= fc.PathInApis,Changes= changes, Team= fc.Team }))
                 {
                     Console.WriteLine($"Warning: Duplicate API name '{fc.Name}' found. Skipping.");
                 }
