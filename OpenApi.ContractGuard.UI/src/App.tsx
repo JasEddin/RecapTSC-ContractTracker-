@@ -31,6 +31,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string>("ALL");
   const [showHeader, setShowHeader] = useState(true);
+  const [isFilteredByCritical, setIsFilteredByCritical] = useState<boolean>(false);
 
   useEffect(() => {
     fetch("http://localhost:5093/api/applications")
@@ -58,29 +59,36 @@ function App() {
     }
   }, [selectedApp]);
 
-const filteredApplications =
-  selectedTeam === "ALL"
-    ? applications
-    : applications.filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
+  const filteredApplicationsByTeam =
+    selectedTeam === "ALL"
+      ? applications
+      : applications.filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
 
-const uniqueTeams = Array.from(
-  new Map(
-    applications.map(app => [
-      app.team.name.toLowerCase(),
-      {
-        name: app.team.name,
-        mail: app.team.mail
-      }
-    ])
-  ).values()
-).sort((a, b) => a.name.localeCompare(b.name));
+  const higherFilteredApplications = isFilteredByCritical
+    ? filteredApplicationsByTeam.filter(app => app.changeImpact === 1)
+    : filteredApplicationsByTeam;
 
-const capitalizeWords = (text: string) =>
-  text
-    .split(" ")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-  debugger;
+  const filteredByCriticalOnly = isFilteredByCritical
+    ? applications.filter(app => app.changeImpact === 1)
+    : applications;
+
+  const uniqueTeams = Array.from(
+    new Map(
+      filteredByCriticalOnly.map(app => [
+        app.team.name.toLowerCase(),
+        {
+          name: app.team.name,
+          mail: app.team.mail
+        }
+      ])
+    ).values()
+  ).sort((a, b) => a.name.localeCompare(b.name));
+
+  const capitalizeWords = (text: string) =>
+    text
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   return (
     <>
       {!selectedApp && showHeader && (
@@ -92,7 +100,11 @@ const capitalizeWords = (text: string) =>
               <p className="subtitle">Watching your API contracts</p>
             </header>
             <div className="content fade-in">
-              <h2 className="section-title">{`Tracked applications (${filteredApplications.length})`}</h2>
+              <h2 className="section-title">{`Tracked applications (${higherFilteredApplications.length})`}
+                <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#f9f9f9", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
+              </h2>
+              <span className="filter-icon">
+              </span>
               <select
                 className="team-select"
                 value={selectedTeam}
@@ -106,8 +118,8 @@ const capitalizeWords = (text: string) =>
                 <option value="ALL">All Teams</option>
 
                 {uniqueTeams.map(team => (
-                      <option key={team.name} value={team.name}>
-                        {capitalizeWords(team.name)}
+                  <option key={team.name} value={team.name}>
+                    {capitalizeWords(team.name)}
                   </option>
                 ))}
               </select>
@@ -116,9 +128,8 @@ const capitalizeWords = (text: string) =>
             {error && <p>Error: {error}</p>}
             {!loading && !error && (
               <>
-
                 <div className="app-list">
-                  {filteredApplications.map((app, index) => (
+                  {higherFilteredApplications.map((app, index) => (
                     <div
                       key={app.name}
                       className={`app-card slide-up ${app.changeImpact === 1 ? "critical" : ""}`}
@@ -142,29 +153,32 @@ const capitalizeWords = (text: string) =>
             <aside className="sidebar">
               <div className="sidebar-header">
                 <img src={Logo} className="sidebar-logo" />
-                <span className="sidebar-title"> {`Applications (${filteredApplications.length})`} </span>
-             </div>
-                <select
-                 className="team-select sidebar-select"
-                  value={selectedTeam}
-                  onChange={(e) => {
-                    setSelectedTeam(e.target.value);
-                    setSelectedApp(null);
-                    setApplicationDetails(null);
-                    setShowHeader(false);
-                  }}
-                >
-                  <option value="ALL">All Teams</option>
-                  {uniqueTeams.map(team => (
-                    <option key={team.name} value={team.name}>
-                      {capitalizeWords(team.name)}
-                    </option>
-                  ))}
-                </select>
-          
+                <span className="sidebar-title"> {`Applications (${higherFilteredApplications.length})`} </span>
+                <span className="filter-icon sidebar-filter-icon">
+                  <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#020617", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
+                </span>
+              </div>
+              <select
+                className="team-select sidebar-select"
+                value={selectedTeam}
+                onChange={(e) => {
+                  setSelectedTeam(e.target.value);
+                  setSelectedApp(null);
+                  setApplicationDetails(null);
+                  setShowHeader(false);
+                }}
+              >
+                <option value="ALL">All Teams</option>
+                {uniqueTeams.map(team => (
+                  <option key={team.name} value={team.name}>
+                    {capitalizeWords(team.name)}
+                  </option>
+                ))}
+              </select>
+
 
               <div className="sidebar-list">
-                {filteredApplications.map((app) => (
+                {higherFilteredApplications.map((app) => (
                   <div
                     key={app.name}
                     className={`sidebar-item ${selectedApp === app ? "active" : ""
@@ -172,7 +186,7 @@ const capitalizeWords = (text: string) =>
                     onClick={() => setSelectedApp(app)}
                   >
                     <span className="sidebar-icon">
-                      {app.changeImpact === 1 ? "🛑" : "🟢"}
+                      {app.changeImpact === 1 ? "🔴" : "🟢"}
                     </span>
                     <span className="sidebar-text">
                       {app.name}

@@ -415,3 +415,9 @@ body {
   border-color: #38bdf8;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
+.critical-filter-btn{
+  /* make borders radius */
+          border: 1px solid gray;
+              padding: 3px 3px;
+              border-radius: 999px;
+}
