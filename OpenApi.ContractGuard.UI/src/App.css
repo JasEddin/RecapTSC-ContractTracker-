@@ -255,9 +255,9 @@ body {
    SIDEBAR
 ========================= */
 .sidebar {
-  min-width: 260px;     
-  max-width: 420px;    
-  width: auto;         
+  min-width: 300px;     
+  max-width: 500px;    
+  width: inherit;         
   background: #020617;
   color: #e5e7eb;
   padding: 20px 12px;
@@ -383,4 +383,35 @@ body {
 .swagger-icon {
   width: 18px;
   height: 18px;
+}
+
+.team-select {
+  width: 100%;
+  max-width: 740px;
+
+  padding: 10px 16px;
+  margin-bottom: 16px;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+
+  background: white;
+  color: #0f172a;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.team-select:hover {
+  border-color: #38bdf8;
+}
+
+.team-select:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }

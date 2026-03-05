@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
 type Application = {
-  changeImpact:0|1;
+  changeImpact: 0 | 1;
   name: string;
+  team: { name: string, mail: string };
 }
 
 export type ApplicationDetails = {
@@ -28,6 +29,8 @@ function App() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string>("ALL");
+  const [showHeader, setShowHeader] = useState(true);
 
   useEffect(() => {
     fetch("http://localhost:5093/api/applications")
@@ -55,10 +58,32 @@ function App() {
     }
   }, [selectedApp]);
 
+const filteredApplications =
+  selectedTeam === "ALL"
+    ? applications
+    : applications.filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
 
+const uniqueTeams = Array.from(
+  new Map(
+    applications.map(app => [
+      app.team.name.toLowerCase(),
+      {
+        name: app.team.name,
+        mail: app.team.mail
+      }
+    ])
+  ).values()
+).sort((a, b) => a.name.localeCompare(b.name));
+
+const capitalizeWords = (text: string) =>
+  text
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  debugger;
   return (
     <>
-      {!selectedApp && (
+      {!selectedApp && showHeader && (
         <div className="page">
           <div className="container">
             <header className="header fade-in">
@@ -66,40 +91,80 @@ function App() {
               <h1>OpenAPI Contract Tracker</h1>
               <p className="subtitle">Watching your API contracts</p>
             </header>
+            <div className="content fade-in">
+              <h2 className="section-title">{`Tracked applications (${filteredApplications.length})`}</h2>
+              <select
+                className="team-select"
+                value={selectedTeam}
+                onChange={(e) => {
+                  setSelectedTeam(e.target.value);
+                  setSelectedApp(null);
+                  setApplicationDetails(null);
+                  setShowHeader(true);
+                }}
+              >
+                <option value="ALL">All Teams</option>
 
-            <h2 className="section-title">Tracked applications</h2>
-
+                {uniqueTeams.map(team => (
+                      <option key={team.name} value={team.name}>
+                        {capitalizeWords(team.name)}
+                  </option>
+                ))}
+              </select>
+            </div>
             {loading && <p>Loading applications...</p>}
             {error && <p>Error: {error}</p>}
             {!loading && !error && (
-              <div className="app-list">
-                {applications.map((app, index) => (
-                  <div
-                    key={app.name}
-                    className={`app-card slide-up ${app.changeImpact === 1 ? "critical" : ""}`} 
-                    style={{ animationDelay: `${index * 60}ms` }}
-                    onClick={() => setSelectedApp(app)}
-                  >
-                    {app.name}
-                  </div>
-                ))}
-              </div>)}
+              <>
+
+                <div className="app-list">
+                  {filteredApplications.map((app, index) => (
+                    <div
+                      key={app.name}
+                      className={`app-card slide-up ${app.changeImpact === 1 ? "critical" : ""}`}
+                      style={{ animationDelay: `${index * 60}ms` }}
+                      onClick={() => setSelectedApp(app)}
+                    >
+                      {app.name}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
 
-      {selectedApp && !loading && !error && (
+      {(selectedApp || !showHeader) && !loading && !error && (
         <div className="page">
           <div className="layout">
             {/* ASIDE / LEFT MENU */}
             <aside className="sidebar">
               <div className="sidebar-header">
                 <img src={Logo} className="sidebar-logo" />
-                <span className="sidebar-title"> {`Applications (${applications.length})`} </span>
-              </div>
+                <span className="sidebar-title"> {`Applications (${filteredApplications.length})`} </span>
+             </div>
+                <select
+                 className="team-select sidebar-select"
+                  value={selectedTeam}
+                  onChange={(e) => {
+                    setSelectedTeam(e.target.value);
+                    setSelectedApp(null);
+                    setApplicationDetails(null);
+                    setShowHeader(false);
+                  }}
+                >
+                  <option value="ALL">All Teams</option>
+                  {uniqueTeams.map(team => (
+                    <option key={team.name} value={team.name}>
+                      {capitalizeWords(team.name)}
+                    </option>
+                  ))}
+                </select>
+          
 
               <div className="sidebar-list">
-                {applications.map((app) => (
+                {filteredApplications.map((app) => (
                   <div
                     key={app.name}
                     className={`sidebar-item ${selectedApp === app ? "active" : ""
@@ -108,7 +173,7 @@ function App() {
                   >
                     <span className="sidebar-icon">
                       {app.changeImpact === 1 ? "🛑" : "🟢"}
-                    </span> 
+                    </span>
                     <span className="sidebar-text">
                       {app.name}
                     </span>

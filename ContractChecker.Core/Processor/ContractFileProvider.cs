@@ -1,5 +1,6 @@
 ﻿using ContractChecker.Core.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using System.Text.RegularExpressions;
 
@@ -70,16 +71,9 @@ namespace ContractChecker.Core.Processor
                 var doc = reader.Read(stream, out var diagnostics);
 
                 // change it ( sometimes the tittle is contains the version, we want to remove it) 
-                contractFile.Name = doc.Info?.Title?? "Unknown";
+                contractFile.Name = doc.Info?.Title ?? "Unknown title";
 
-                var nameOfTeam= NormalizeTeamName(doc.Info?.Contact?.Name?? null) ;
-                var mailOfTeam= doc.Info?.Contact?.Email?.Trim()?.ToLower()?? "Unknown";
-
-                contractFile.Team = new Team
-                {
-                    Name = nameOfTeam,
-                    Mail = mailOfTeam
-                };
+                contractFile.Team = NormalizeTeam(doc.Info?.Contact);
 
                 // extract servers from Settings.Yaml 
                 contractFile.Server = GetServer(filePath);
@@ -129,17 +123,25 @@ namespace ContractChecker.Core.Processor
                 ? int.Parse(match.Groups[1].Value)
                 : null;
         }
-        string NormalizeTeamName(string? name)
+        private Team NormalizeTeam(OpenApiContact? contact)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return "Unknown";
+            var unknownTeam = new Team
+            {
+                Name = "Unknown",
+                Mail = "Unknown"
+            };
 
-            name = name.Trim();
+            if (contact == null)
+            {
+                return unknownTeam;
+            }
+            if (string.IsNullOrWhiteSpace(contact.Name) || string.IsNullOrWhiteSpace(contact.Email))
+                return unknownTeam;
 
-            if (name.StartsWith("Team ", StringComparison.OrdinalIgnoreCase))
-                name = name.Substring(5);
+            if (contact.Name.StartsWith("Team ", StringComparison.OrdinalIgnoreCase))
+                return new Team { Name = contact.Name.Substring(5), Mail = contact.Email.Trim().ToLower() };
 
-            return name.ToLowerInvariant();
+            return new Team { Name = contact.Name.Trim().ToLower(), Mail = contact.Email.Trim().ToLower() };
         }
     }
 }
