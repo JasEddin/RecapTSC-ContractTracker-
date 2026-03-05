@@ -322,9 +322,38 @@ body {
    MAIN PANEL
 ========================= */
 .main {
+  position: fixed;
   flex: 1;
-  padding: 48px;
+  padding: 4px;
   background: #f8fafc;
+
+  left: 33em;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+
+  animation: float 5s ease-in-out  infinite;
+}
+
+/* floating animation */
+@keyframes float {
+ /*transform in circular motion to create a floating effect */
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(4px, -4px);
+  }
+  50% {
+    transform: translate(0, -8px);
+  }
+  75% {
+    transform: translate(-4px, -4px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+
 }
 
 .floating-actions {
@@ -420,4 +449,13 @@ body {
           border: 1px solid gray;
               padding: 3px 3px;
               border-radius: 999px;
+}
+
+.floating-area {
+    position: fixed;
+    top: 100px;
+    left: 24px;
+    display: flex;
+    gap: 14px;
+    z-index: 1000;
 }
