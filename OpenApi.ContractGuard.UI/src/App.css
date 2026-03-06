@@ -278,13 +278,19 @@ body {
 
 .sidebar-title {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /**/
+      padding-left: inherit;
+  margin-top: 100px;
 }
 
 .sidebar-item {
@@ -326,6 +332,7 @@ body {
   flex: 1;
   padding: 4px;
   background: #f8fafc;
+  width: 50%;
 
   left: 33em;
   top: 0;
@@ -458,4 +465,21 @@ body {
     display: flex;
     gap: 14px;
     z-index: 1000;
+}
+
+.sidebar-background{
+  position: fixed; 
+    
+  max-width: 488px;    
+  width: inherit;         
+  background: #020617;
+  color: #e5e7eb;
+  padding: 20px 12px;
+  display: flex;
+  /* flex-direction: column; */
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
 }

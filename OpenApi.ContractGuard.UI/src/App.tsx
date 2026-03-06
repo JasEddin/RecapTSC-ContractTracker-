@@ -11,7 +11,7 @@ type Application = {
 
 export type ApplicationDetails = {
   name: string;
-  url: string;
+  server: string;
   localContractPath: string;
   changes: {
     changeType: number;
@@ -151,32 +151,32 @@ function App() {
           <div className="layout">
             {/* ASIDE / LEFT MENU */}
             <aside className="sidebar">
-              <div className="sidebar-header">
-                <img src={Logo} className="sidebar-logo" />
-                <span className="sidebar-title"> {`Applications (${higherFilteredApplications.length})`} </span>
-                <span className="filter-icon sidebar-filter-icon">
-                  <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#020617", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
-                </span>
+              <div className="sidebar-background" >
+                <div className="sidebar-header" >
+                  <img style={{ position: "fixed", top: "20px", left: "20px" }} src={Logo} className="sidebar-logo" />
+                  <span style={{ position: "fixed", top: "20px", left: "60px" }} className="sidebar-title"> {`Applications (${higherFilteredApplications.length})`} </span>
+                  <span className="filter-icon sidebar-filter-icon" style={{ position: "fixed", top: "20px", left: "440px" }}>
+                    <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#020617", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
+                  </span>
+                </div>
+                <select  style={{ position: "fixed", top: "68px" ,width: "468px"}}
+                  className="team-select sidebar-select"
+                  value={selectedTeam}
+                  onChange={(e) => {
+                    setSelectedTeam(e.target.value);
+                    setSelectedApp(null);
+                    setApplicationDetails(null);
+                    setShowHeader(false);
+                  }}
+                >
+                  <option value="ALL">All Teams</option>
+                  {uniqueTeams.map(team => (
+                    <option key={team.name} value={team.name}>
+                      {capitalizeWords(team.name)}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <select
-                className="team-select sidebar-select"
-                value={selectedTeam}
-                onChange={(e) => {
-                  setSelectedTeam(e.target.value);
-                  setSelectedApp(null);
-                  setApplicationDetails(null);
-                  setShowHeader(false);
-                }}
-              >
-                <option value="ALL">All Teams</option>
-                {uniqueTeams.map(team => (
-                  <option key={team.name} value={team.name}>
-                    {capitalizeWords(team.name)}
-                  </option>
-                ))}
-              </select>
-
-
               <div className="sidebar-list">
                 {higherFilteredApplications.map((app) => (
                   <div
@@ -197,13 +197,13 @@ function App() {
             </aside>
             {selectedApp && applicationDetails ? (
 
-              <main className="main">
+              <main className="main"  >
                 <ContractComparisonResult {...applicationDetails!} />
               </main>
 
             ) : (
-              <div className="main-placeholder">
-                <p>Select an application to view details</p>
+              <div className="main placeholder" style={{paddingTop:"150px"}}>
+                <h2>⬅️ Select an application to view details</h2>
               </div>
             )}
           </div>
