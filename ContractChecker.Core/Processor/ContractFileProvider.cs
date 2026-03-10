@@ -67,16 +67,13 @@ namespace ContractChecker.Core.Processor
                 };
 
                 using var stream = File.OpenRead(filePath);
+                //  Check if the file is empty 
                 var reader = new OpenApiStreamReader();
                 var doc = reader.Read(stream, out var diagnostics);
 
-                // change it ( sometimes the tittle is contains the version, we want to remove it) 
-                contractFile.Name = doc.Info?.Title ?? "Unknown title";
+                (contractFile.Name, contractFile.Server) = GetNameAnddServer(filePath);
 
                 contractFile.Team = NormalizeTeam(doc.Info?.Contact);
-
-                // extract servers from Settings.Yaml 
-                contractFile.Server = GetServer(filePath);
 
                 contractFile.LatestVersion = GetVersionFromParentFolder(filePath) ?? 0;
 
@@ -88,25 +85,34 @@ namespace ContractChecker.Core.Processor
             }
         }
 
-        private string GetServer(string filePath)
+        private (string name, string server) GetNameAnddServer(string filePath)
         {
+            var (name, server) = ("", "");
             // get the path of settings.yaml in the same folder of the json file
             var settingsFilePath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, "settings.yaml");
             if (!File.Exists(settingsFilePath))
-                return "";
+                return (name, server);
 
             // find properte's value of backendEndpoint: 
             var lines = File.ReadAllLines(settingsFilePath);
-
+            
+         
             foreach (var line in lines)
             {
+                if (line.TrimStart().StartsWith("apicBasePath:"))
+                {
+                    // capitalize the Name and the letter after point in name, for example if the name is "user.profile" then the result should be "User.Profile"
+                    var nameUncapitalized = line.Substring(line.IndexOf("apicBasePath::") + "apicBasePath::".Length).Trim().TrimStart('/');
+                    name = string.Join('.', nameUncapitalized.Split('.').Select(part => char.ToUpper(part[0]) + part.Substring(1)));
+
+                }
                 if (line.TrimStart().StartsWith("backendEndpoint:"))
                 {
-                    var url = line.Substring(line.IndexOf("backendEndpoint:") + "backendEndpoint:".Length).Trim();
-                    return url;
+                    server = line.Substring(line.IndexOf("backendEndpoint:") + "backendEndpoint:".Length).Trim();
+
                 }
             }
-            return "";
+            return (name, server);
         }
 
         private static int? GetVersionFromParentFolder(string filePath)
