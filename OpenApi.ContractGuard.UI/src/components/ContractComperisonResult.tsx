@@ -4,7 +4,6 @@ import swaggerIcon from "../assets/swagger-icon.svg";
 export function ContractComparisonResult({ changes, name, server , localContractPath }: ApplicationDetails) {
   const breakingChanges = changes.filter(change => change.impact === 1);
   const informationalChanges = changes.filter(change => change.impact === 0);
-  debugger;
   return (
     <div className="result-card">
       <h2>{name} – Contract Comparison</h2>

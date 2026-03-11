@@ -8,6 +8,7 @@ type Application = {
   name: string;
   team: { name: string, mail: string };
 }
+type Environment = "u3" | "u4" | "u5";
 
 export type ApplicationDetails = {
   name: string;
@@ -21,11 +22,24 @@ export type ApplicationDetails = {
     impact: number;
   }[];
 };
-
+ 
 function App() {
 
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
+  const [applications , setApplications ] = useState<Record<Environment, Application[]>>({
+    u3: [],
+    u4: [],
+    u5: []
+  });
+
+
+
+  const [applicationDetails, setApplicationDetails] = useState<Record<Environment, ApplicationDetails | null>>({
+    u3: null ,
+    u4: null,
+    u5: null
+  });
+
+  const [selectedEnv, setSelectedEnv] = useState<Environment>("u3");
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,43 +48,49 @@ function App() {
   const [isFilteredByCritical, setIsFilteredByCritical] = useState<boolean>(false);
 
   useEffect(() => {
-    fetch("http://localhost:5093/api/applications")
+    setLoading(true);
+    fetch(`http://localhost:5093/api/applications/${selectedEnv}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load applications");
         return res.json();
       })
-      .then(setApplications)
+      .then((data) => {
+
+         
+        setApplications(prev => ({ ...prev, [selectedEnv]: data }));
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedEnv]);
+
 
   useEffect(() => {
     if (selectedApp) {
       document.title = `${selectedApp.name} - OpenAPI Contract Tracker`;
-      fetch(`http://localhost:5093/api/application/${selectedApp.name}`)
+      fetch(`http://localhost:5093/api/application/q?name=${selectedApp.name}&env=${selectedEnv}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to load application details");
           return res.json();
         })
         .then((data) => {
-          setApplicationDetails(data);
+          setApplicationDetails(prev => ({ ...prev, [selectedEnv]: data }));
         })
         .catch((err) => setError(err.message));
     }
-  }, [selectedApp]);
+  }, [selectedApp, selectedEnv]);
 
   const filteredApplicationsByTeam =
     selectedTeam === "ALL"
-      ? applications
-      : applications.filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
+      ? applications[selectedEnv]
+      : applications[selectedEnv].filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
 
   const higherFilteredApplications = isFilteredByCritical
     ? filteredApplicationsByTeam.filter(app => app.changeImpact === 1)
     : filteredApplicationsByTeam;
 
   const filteredByCriticalOnly = isFilteredByCritical
-    ? applications.filter(app => app.changeImpact === 1)
-    : applications;
+    ? applications[selectedEnv].filter(app => app.changeImpact === 1)
+    : applications[selectedEnv];
 
   const uniqueTeams = Array.from(
     new Map(
@@ -111,7 +131,7 @@ function App() {
                 onChange={(e) => {
                   setSelectedTeam(e.target.value);
                   setSelectedApp(null);
-                  setApplicationDetails(null);
+                  setApplicationDetails(prev => ({ ...prev, [selectedEnv]: null }));
                   setShowHeader(true);
                 }}
               >
@@ -124,7 +144,7 @@ function App() {
                 ))}
               </select>
             </div>
-            {loading && <p>Loading applications...</p>}
+            {loading && <h2> ⏳ Loading applications...</h2>}
             {error && <p>Error: {error}</p>}
             {!loading && !error && (
               <>
@@ -165,7 +185,7 @@ function App() {
                   onChange={(e) => {
                     setSelectedTeam(e.target.value);
                     setSelectedApp(null);
-                    setApplicationDetails(null);
+                    setApplicationDetails(prev => ({ ...prev, [selectedEnv]: null }));
                     setShowHeader(false);
                   }}
                 >
@@ -195,10 +215,10 @@ function App() {
                 ))}
               </div>
             </aside>
-            {selectedApp && applicationDetails ? (
+            {selectedApp && applicationDetails[selectedEnv]  ? (
 
               <main className="main"  >
-                <ContractComparisonResult {...applicationDetails!} />
+                <ContractComparisonResult {...applicationDetails[selectedEnv]!} />
               </main>
 
             ) : (
