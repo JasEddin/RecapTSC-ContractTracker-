@@ -1,8 +1,7 @@
 ﻿using ContractChecker.Core.Models;
-using Microsoft.Extensions.Configuration;
 
 public interface IApplicationProvider
 {
-    Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync();
-    Task<ApplicationDetail> GetApplicationAsync(string name);
+    Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync(string env);
+    Task<ApplicationDetail> GetApplicationAsync(string name, string env);
 }

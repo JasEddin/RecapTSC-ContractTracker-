@@ -3,8 +3,6 @@ using Microsoft.OpenApi.Readers;
 
 public class OpenApiLoader : IOpenApiLoader
 {
-    private const string EnvironmentOFServer = "u3";
-
     private readonly IHttpClientFactory _httpClientFactory;
 
     public OpenApiLoader(IHttpClientFactory httpClientFactory)
@@ -71,93 +69,47 @@ public class OpenApiLoader : IOpenApiLoader
         }
     }
 
-    public async Task<List<string>> ValidateServerAsync(string url)
+    public async Task<bool> ValidateServerAsync(string url, string env = "u3")
     {
-        var suffixes = new[] {
-           //"/swagger/v1.0/swagger.json", 
-           //$"/openapi/v{latestVersion}/openapi.json",
-           //"/openapi/v1.0/openapi.json", check it later
-           "/swagger/index.html"
-        };
-
-        // we need to replace the environment variable with the actual value
-        url = url.Replace("$(environment)", $".{EnvironmentOFServer}.");
-
         if (string.IsNullOrWhiteSpace(url))
-            return null;
-
-        var validServers = new List<string>();
+            return false;
+      
+        var swaggerLink = url.Replace("$(environment)", $".{env}.") + "/swagger/index.html";
         var client = _httpClientFactory.CreateClient("OpenApiProbe");
-
-        foreach (var suffix in suffixes)
+     
+        
+        if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
         {
-            var swaggerLink = url + suffix;
-            if (string.IsNullOrWhiteSpace(swaggerLink))
-                continue;
-
-            if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
-                continue;
-
-            var reachable = await IsReachableAsync(client, uri);
-            if (reachable)
-                validServers.Add(url);
+            Console.WriteLine($"[WARN] Invalid URL format: {swaggerLink}");
+            return false;
         }
 
-        return validServers;
+        if (await IsReachableAsync(client, uri))
+        {
+            return true;
+        }
+        return false;
     }
 
-    //public async Task<OpenApiDocument> LoadFromServerAsync(IEnumerable<string> urls, int latestVersion)
-    //{
-
-    //    // if the urls is empty
-    //    if (!urls.Any())
-    //        throw new ArgumentException("Url must not be empty.", nameof(urls));
-
-    //    // extract only valid urls from the list
-    //    var validUrl = await ValidateServersAsync(urls).ConfigureAwait(false);
-
-    //    using var httpClient = new HttpClient();
-
-    //    using var response = await httpClient.GetAsync(validUrl);
-
-    //    if (!response.IsSuccessStatusCode)
-    //        throw new InvalidOperationException(
-    //            $"Failed to download OpenAPI document. Status: {response.StatusCode}");
-
-    //    using var stream = await response.Content.ReadAsStreamAsync();
-    //    var reader = new OpenApiStreamReader();
-
-    //    var document = reader.Read(stream, out var diagnostics);
-
-    //    if (diagnostics.Errors.Any())
-    //    {
-    //        throw new InvalidOperationException(
-    //            "Invalid OpenAPI document:" + Environment.NewLine +
-    //            string.Join(Environment.NewLine, diagnostics.Errors.Select(e => e.Message)));
-    //    }
-
-    //    if (document is null)
-    //        throw new InvalidOperationException("Failed to parse OpenAPI document.");
-
-    //    return document;
-    //}
 
     public async Task<OpenApiDocument?> LoadFromValidServerAsync(
      string server,
-     int latestVersion)
+     int latestVersion,
+     string environment = "u3")
     {
         if (string.IsNullOrWhiteSpace(server))
         {
             Console.WriteLine("[WARN] Server URL is empty.");
             return null;
         }
-
-        //server = server.Replace("$(environment)", $".{EnvironmentOFServer}.");
+        server = server.Replace("$(environment)", $".{environment}.");
         var candidateUrls = new[]
-            { $"{server}/openapi/v{latestVersion}/openapi.json",
-             $"{server}/swagger/v{latestVersion}/swagger.json" };
-        //  $"{serverUrl}//openapi.json" (2 träff) , we can add it later if needed
-        //openapi/v{latestVersion}.json (1 träff)  
+        {
+        $"{server}/openapi/v{latestVersion}/openapi.json",
+        $"{server}/swagger/v{latestVersion}/swagger.json",
+        $"{server}/api-docs/v{latestVersion}.json",
+        $"{server}/openapi.json"
+        };
 
         using var httpClient = new HttpClient
         {
@@ -184,7 +136,7 @@ public class OpenApiLoader : IOpenApiLoader
                 if (diagnostics.Errors.Any())
                 {
                     Console.WriteLine($"[WARN] Invalid OpenAPI document at {url}");
-                    continue;
+                    continue;  // toDo return the error to UI
                 }
 
                 Console.WriteLine($"[INFO] Successfully loaded OpenAPI from {url}");

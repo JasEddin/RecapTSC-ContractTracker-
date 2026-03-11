@@ -46,17 +46,18 @@ app.UseHttpsRedirection();
 
 app.MapHealthChecks("/health");
 
-app.MapGet("/api/applications", async (IApplicationProvider provider, IContractFileProvider contractFileProvider) =>
+app.MapGet("/api/applications/{environment}", async (IApplicationProvider provider, IContractFileProvider contractFileProvider, string environment= "u3") =>
 {
 
-    IEnumerable<ApplicationInfo> result = await provider.GetApplicationsAsync();
+    var result = await provider.GetApplicationsAsync(environment);
     return Results.Ok(result);
 });
 
 
-app.MapGet("/api/application/{name}", async (IApplicationProvider provider, string name ) =>
+
+app.MapGet("/api/application/{name,environment}", async (IApplicationProvider provider, string name, string environment = "u3") =>
 {
-    ApplicationDetail result = await provider.GetApplicationAsync(name);
+    ApplicationDetail result = await provider.GetApplicationAsync(name , environment);
     return Results.Ok(result);
 });
 
