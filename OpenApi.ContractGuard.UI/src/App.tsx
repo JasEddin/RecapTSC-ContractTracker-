@@ -33,9 +33,7 @@ function App() {
     u5: []
   });
 
-  const findApplicationByName = (name: string, env: Environment): Application | undefined => {
-    return applications[env].find(app => app.name === name);
-  }
+ 
 
   const [applicationDetails, setApplicationDetails] = useState<Record<Environment, ApplicationDetails | null>>({
     u3: null,
@@ -53,52 +51,37 @@ function App() {
 
  
 useEffect(() => {
-
   const loadApplications = async () => {
     try {
       setLoading(true);
       for (let i = 0; i < envs.length; i++) {
-
         const env = envs[i];
-
         const res = await fetch(`http://localhost:5093/api/applications/${env}`);
-
         if (!res.ok) {
           throw new Error(`Failed loading ${env}`);
         }
-
         const data = await res.json();
-
         setApplications(prev => ({
           ...prev,
           [env]: data
         }));
-
         // stop loading after first env
         if (i === 0) {
           setLoading(false);
         }
-
       }
-
     } catch (err: any) {
-
       setError(err.message);
       setLoading(false);
-
     }
-
   };
-
   loadApplications();
-
 }, []);
-
 
   useEffect(() => {
     if (selectedApp) {
       document.title = `${selectedApp.name} - OpenAPI Contract Tracker`;
-      fetch(`http://localhost:5093/api/application/q?name=${selectedApp.name}&env=${selectedEnv}`)
+      fetch(`http://localhost:5093/api/application?name=${selectedApp.name}&environment=${selectedEnv}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to load application details");
           return res.json();
@@ -161,13 +144,19 @@ useEffect(() => {
     }
   };
   const getImpact = (env: Environment, appName: string) => {
+
     const app = applications[env].find(a => a.name === appName);
     return app?.changeImpact === 1;
   };
 
+  const selectApp = (env: Environment, name: string) => {
+  const app = applications[env].find(app => app.name === name);
+  setSelectedEnv(env);
+  setSelectedApp(app || null);
+};
+
   return (
     <>
-
       {!selectedApp && showHeader && (
 
         <div className="page">
@@ -243,21 +232,28 @@ useEffect(() => {
                       <div className="status-cell">
                         <button
                           className="env-btn mini"
-                          onClick={() => setSelectedApp(findApplicationByName(app.name, "u3") || null)}>
+                          onClick={() => {
+                          selectApp("u3", app.name);
+                          }}>
                           {getBall("u3", app.name)}
                         </button>
                       </div>
                       <div className="status-cell">
                         <button
                           className="env-btn mini"
-                          onClick={() => setSelectedApp(findApplicationByName(app.name, "u4") || null)}>
+                          onClick={() => {
+                            debugger;
+                            selectApp("u4", app.name);
+                          }}>
                           {getBall("u4", app.name)}
                         </button>
                       </div>
                       <div className="status-cell">
                         <button
                           className="env-btn mini"
-                          onClick={() => setSelectedApp(findApplicationByName(app.name, "u5") || null)}>
+                          onClick={() => {
+                            selectApp("u5", app.name);
+                          }}>
                           {getBall("u5", app.name)}
                         </button>
                       </div>
