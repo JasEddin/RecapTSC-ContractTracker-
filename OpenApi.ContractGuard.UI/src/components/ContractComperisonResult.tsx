@@ -1,35 +1,63 @@
-import type { ApplicationDetails, Environment } from "../App";
+import { useState } from "react";
+import { Environments, type ApplicationDetails, type Environment } from "../App";
 import swaggerIcon from "../assets/swagger-icon.svg";
 
-export function ContractComparisonResult({ changes, name, server , localContractPath, env }: ApplicationDetails & { env: Environment }) {
+export function ContractComparisonResult({ changes,  name,  server,  localContractPath , env }: ApplicationDetails & { env: Environment }) {
+
+  const [selectedEnv, setSelectedEnv] = useState<Environment>(env);
   const breakingChanges = changes.filter(change => change.impact === 1);
   const informationalChanges = changes.filter(change => change.impact === 0);
+  const serverUrl = server.replace("$(environment)", `.${selectedEnv}.`);
   return (
     <div className="result-card">
+
       <h2>{name} – Contract Comparison</h2>
+
+      {/* ENVIRONMENT TABS */}
+      <div className="env-tabs">
+        {Environments.map(e => (
+          <button
+            key={e}
+            className={`env-tab ${selectedEnv === e ? "active" : ""}`}
+            onClick={() => setSelectedEnv(e)}
+          >
+            {e.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
       <div className="floating-actions">
         <button
           className="floating-btn swagger-btn"
-
-          //replace word $(environment) in server url with actual environment value
-          onClick={() => window.open(`${server.replace("$(environment)", `.${env}.`)}/swagger/index.html`, "_blank")}
+          onClick={() =>
+            window.open(`${serverUrl}/swagger/index.html`, "_blank")
+          }
         >
           <img src={swaggerIcon} alt="Swagger" className="swagger-icon" />
-          <span> Swagger </span>
+          <span>Swagger</span>
         </button>
 
         <button
           className="floating-btn local-btn"
-          onClick={() => window.open(`http://localhost:5093/api/open-with-vscode?path=${encodeURIComponent(localContractPath)}`, "_blank")}
+          onClick={() =>
+            window.open(
+              `http://localhost:5093/api/open-with-vscode?path=${encodeURIComponent(
+                localContractPath
+              )}`,
+              "_blank"
+            )
+          }
         >
-          📂 View Contract in Apis 
+          📂 View Contract in Apis
         </button>
       </div>
+
       {/* Breaking changes */}
       <div className="changes-section">
         <h3 className="breaking-title">
           🚨 Breaking Changes ({breakingChanges.length})
         </h3>
+
         {breakingChanges.length > 0 ? (
           <ul className="changes-list breaking-list">
             {breakingChanges.map((change, index) => (

@@ -580,3 +580,28 @@ body {
   text-align:center;
   font-size:20px;
 }
+
+.env-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.env-tab {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #d1d5db;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.env-tab:hover {
+  background: #e2e8f0;
+}
+
+.env-tab.active {
+  background: #0ea5e9;
+  color: white;
+  border-color: #0284c7;
+}

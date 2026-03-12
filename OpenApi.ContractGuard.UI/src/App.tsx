@@ -10,7 +10,7 @@ type Application = {
 }
 export type Environment = "u3" | "u4" | "u5";
 
-const envs: Environment[] = ["u3", "u4", "u5"];
+export const Environments: Environment[] = ["u3", "u4", "u5"];
 
 export type ApplicationDetails = {
   name: string;
@@ -54,8 +54,8 @@ useEffect(() => {
   const loadApplications = async () => {
     try {
       setLoading(true);
-      for (let i = 0; i < envs.length; i++) {
-        const env = envs[i];
+      for (let i = 0; i < Environments.length; i++) {
+        const env = Environments[i];
         const res = await fetch(`http://localhost:5093/api/applications/${env}`);
         if (!res.ok) {
           throw new Error(`Failed loading ${env}`);
