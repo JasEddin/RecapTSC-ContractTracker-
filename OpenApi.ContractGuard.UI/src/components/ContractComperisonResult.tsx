@@ -1,7 +1,7 @@
-import type { ApplicationDetails } from "../App";
+import type { ApplicationDetails, Environment } from "../App";
 import swaggerIcon from "../assets/swagger-icon.svg";
 
-export function ContractComparisonResult({ changes, name, server , localContractPath }: ApplicationDetails) {
+export function ContractComparisonResult({ changes, name, server , localContractPath, env }: ApplicationDetails & { env: Environment }) {
   const breakingChanges = changes.filter(change => change.impact === 1);
   const informationalChanges = changes.filter(change => change.impact === 0);
   return (
@@ -10,7 +10,9 @@ export function ContractComparisonResult({ changes, name, server , localContract
       <div className="floating-actions">
         <button
           className="floating-btn swagger-btn"
-          onClick={() => window.open(`${server}/swagger/index.html`, "_blank")}
+
+          //replace word $(environment) in server url with actual environment value
+          onClick={() => window.open(`${server.replace("$(environment)", `.${env}.`)}/swagger/index.html`, "_blank")}
         >
           <img src={swaggerIcon} alt="Swagger" className="swagger-icon" />
           <span> Swagger </span>

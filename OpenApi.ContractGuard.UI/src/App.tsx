@@ -8,7 +8,7 @@ type Application = {
   name: string;
   team: { name: string, mail: string };
 }
-type Environment = "u3" | "u4" | "u5";
+export type Environment = "u3" | "u4" | "u5";
 
 const envs: Environment[] = ["u3", "u4", "u5"];
 
@@ -318,7 +318,7 @@ useEffect(() => {
             {selectedApp && applicationDetails[selectedEnv] ? (
 
               <main className="main"  >
-                <ContractComparisonResult {...applicationDetails[selectedEnv]!} />
+                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} />
               </main>
 
             ) : (
