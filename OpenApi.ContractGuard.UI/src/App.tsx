@@ -33,7 +33,7 @@ function App() {
     u5: []
   });
 
- 
+
 
   const [applicationDetails, setApplicationDetails] = useState<Record<Environment, ApplicationDetails | null>>({
     u3: null,
@@ -49,34 +49,51 @@ function App() {
   const [showHeader, setShowHeader] = useState(true);
   const [isFilteredByCritical, setIsFilteredByCritical] = useState<boolean>(false);
 
- 
-useEffect(() => {
-  const loadApplications = async () => {
-    try {
-      setLoading(true);
-      for (let i = 0; i < Environments.length; i++) {
-        const env = Environments[i];
-        const res = await fetch(`http://localhost:5093/api/applications/${env}`);
-        if (!res.ok) {
-          throw new Error(`Failed loading ${env}`);
+
+  useEffect(() => {
+    const loadApplications = async () => {
+      try {
+        setLoading(true);
+        for (let i = 0; i < Environments.length; i++) {
+          const env = Environments[i];
+          const res = await fetch(`http://localhost:5093/api/applications/${env}`);
+          if (!res.ok) {
+            throw new Error(`Failed loading ${env}`);
+          }
+          const data = await res.json();
+          setApplications(prev => ({
+            ...prev,
+            [env]: data
+          }));
+          // stop loading after first env
+          if (i === 0) {
+            setLoading(false);
+          }
         }
-        const data = await res.json();
-        setApplications(prev => ({
-          ...prev,
-          [env]: data
-        }));
-        // stop loading after first env
-        if (i === 0) {
-          setLoading(false);
-        }
+      } catch (err: any) {
+        setError(err.message);
+        setLoading(false);
       }
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
+    };
+    loadApplications();
+  }, []);
+
+  const changeEnvironment = (env: Environment) => {
+    setSelectedEnv(env);
+
+    if (selectedApp) {
+      fetch(`http://localhost:5093/api/application?name=${selectedApp.name}&environment=${env}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to load application details");
+          return res.json();
+        })
+        .then(data => {
+          setApplicationDetails(prev => ({ ...prev, [env]: data }));
+        })
+        .catch(err => setError(err.message));
     }
   };
-  loadApplications();
-}, []);
+
 
   useEffect(() => {
     if (selectedApp) {
@@ -150,10 +167,10 @@ useEffect(() => {
   };
 
   const selectApp = (env: Environment, name: string) => {
-  const app = applications[env].find(app => app.name === name);
-  setSelectedEnv(env);
-  setSelectedApp(app || null);
-};
+    const app = applications[env].find(app => app.name === name);
+    setSelectedEnv(env);
+    setSelectedApp(app || null);
+  };
 
   return (
     <>
@@ -199,9 +216,9 @@ useEffect(() => {
             {!loading && !error && (
               <>
                 <div className="apps-table">
- 
+
                   <div> </div>
-          
+
                   {(["u3", "u4", "u5"] as Environment[]).map(env => (
                     <div className="env-header">
 
@@ -233,7 +250,7 @@ useEffect(() => {
                         <button
                           className="env-btn mini"
                           onClick={() => {
-                          selectApp("u3", app.name);
+                            selectApp("u3", app.name);
                           }}>
                           {getBall("u3", app.name)}
                         </button>
@@ -318,7 +335,7 @@ useEffect(() => {
             {selectedApp && applicationDetails[selectedEnv] ? (
 
               <main className="main"  >
-                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} />
+                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} onEnvChange={changeEnvironment} />
               </main>
 
             ) : (

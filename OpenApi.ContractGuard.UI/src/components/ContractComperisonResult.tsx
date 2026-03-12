@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Environments, type ApplicationDetails, type Environment } from "../App";
 import swaggerIcon from "../assets/swagger-icon.svg";
 
-export function ContractComparisonResult({ changes,  name,  server,  localContractPath , env }: ApplicationDetails & { env: Environment }) {
+export function ContractComparisonResult({
+  changes,
+  name,
+  server,
+  localContractPath,
+  env,
+  onEnvChange
+}: ApplicationDetails & { env: Environment; onEnvChange: (env: Environment) => void }) {
 
   const [selectedEnv, setSelectedEnv] = useState<Environment>(env);
   const breakingChanges = changes.filter(change => change.impact === 1);
@@ -15,13 +22,16 @@ export function ContractComparisonResult({ changes,  name,  server,  localContra
 
       {/* ENVIRONMENT TABS */}
       <div className="env-tabs">
-        {Environments.map(e => (
+        {Environments.map(env => (
           <button
-            key={e}
-            className={`env-tab ${selectedEnv === e ? "active" : ""}`}
-            onClick={() => setSelectedEnv(e)}
+            key={env}
+            className={`env-tab ${selectedEnv === env ? "active" : ""}`}
+            onClick={() => {
+              setSelectedEnv(env);
+              onEnvChange(env);
+            }}
           >
-            {e.toUpperCase()}
+            {env.toUpperCase()}
           </button>
         ))}
       </div>
