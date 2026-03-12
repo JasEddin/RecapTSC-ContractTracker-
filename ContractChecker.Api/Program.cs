@@ -53,8 +53,6 @@ app.MapGet("/api/applications/{environment}", async (IApplicationProvider provid
     return Results.Ok(result);
 });
 
-
-
 app.MapGet("/api/application/{name,environment}", async (IApplicationProvider provider, string name, string environment = "u3") =>
 {
     ApplicationDetail result = await provider.GetApplicationAsync(name , environment);

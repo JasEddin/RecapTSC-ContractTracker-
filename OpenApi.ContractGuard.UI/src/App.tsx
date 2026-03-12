@@ -10,6 +10,8 @@ type Application = {
 }
 type Environment = "u3" | "u4" | "u5";
 
+const envs: Environment[] = ["u3", "u4", "u5"];
+
 export type ApplicationDetails = {
   name: string;
   server: string;
@@ -22,19 +24,21 @@ export type ApplicationDetails = {
     impact: number;
   }[];
 };
- 
+
 function App() {
 
-  const [applications , setApplications ] = useState<Record<Environment, Application[]>>({
+  const [applications, setApplications] = useState<Record<Environment, Application[]>>({
     u3: [],
     u4: [],
     u5: []
   });
 
-
+  const findApplicationByName = (name: string, env: Environment): Application | undefined => {
+    return applications[env].find(app => app.name === name);
+  }
 
   const [applicationDetails, setApplicationDetails] = useState<Record<Environment, ApplicationDetails | null>>({
-    u3: null ,
+    u3: null,
     u4: null,
     u5: null
   });
@@ -47,21 +51,48 @@ function App() {
   const [showHeader, setShowHeader] = useState(true);
   const [isFilteredByCritical, setIsFilteredByCritical] = useState<boolean>(false);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:5093/api/applications/${selectedEnv}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load applications");
-        return res.json();
-      })
-      .then((data) => {
+ 
+useEffect(() => {
 
-         
-        setApplications(prev => ({ ...prev, [selectedEnv]: data }));
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [selectedEnv]);
+  const loadApplications = async () => {
+    try {
+      setLoading(true);
+      for (let i = 0; i < envs.length; i++) {
+
+        const env = envs[i];
+
+        const res = await fetch(`http://localhost:5093/api/applications/${env}`);
+
+        if (!res.ok) {
+          throw new Error(`Failed loading ${env}`);
+        }
+
+        const data = await res.json();
+
+        setApplications(prev => ({
+          ...prev,
+          [env]: data
+        }));
+
+        // stop loading after first env
+        if (i === 0) {
+          setLoading(false);
+        }
+
+      }
+
+    } catch (err: any) {
+
+      setError(err.message);
+      setLoading(false);
+
+    }
+
+  };
+
+  loadApplications();
+
+}, []);
 
 
   useEffect(() => {
@@ -109,10 +140,38 @@ function App() {
       .split(" ")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+
+
+  const allAppNames = Array.from(
+    new Set([
+      ...applications.u3.map(a => a.name),
+      ...applications.u4.map(a => a.name),
+      ...applications.u5.map(a => a.name)
+    ])
+  );
+
+  const getBall = (env: Environment, appName: string) => {
+    const app = applications[env].find(a => a.name === appName);
+
+    if (!app) return "⚪";
+    if (app.changeImpact === 1) {
+      return "🔴";
+    } else {
+      return "🟢";
+    }
+  };
+  const getImpact = (env: Environment, appName: string) => {
+    const app = applications[env].find(a => a.name === appName);
+    return app?.changeImpact === 1;
+  };
+
   return (
     <>
+
       {!selectedApp && showHeader && (
+
         <div className="page">
+
           <div className="container">
             <header className="header fade-in">
               <img src={Logo} className="logo" />
@@ -143,21 +202,66 @@ function App() {
                   </option>
                 ))}
               </select>
+
+
             </div>
             {loading && <h2> ⏳ Loading applications...</h2>}
             {error && <p>Error: {error}</p>}
             {!loading && !error && (
               <>
-                <div className="app-list">
-                  {higherFilteredApplications.map((app, index) => (
-                    <div
-                      key={app.name}
-                      className={`app-card slide-up ${app.changeImpact === 1 ? "critical" : ""}`}
-                      style={{ animationDelay: `${index * 60}ms` }}
-                      onClick={() => setSelectedApp(app)}
-                    >
-                      {app.name}
+                <div className="apps-table">
+ 
+                  <div> </div>
+          
+                  {(["u3", "u4", "u5"] as Environment[]).map(env => (
+                    <div className="env-header">
+
+                      <button
+                        key={env}
+                        className={`env-btn ${selectedEnv === env ? "active" : ""}`}
+                        onClick={() => setSelectedEnv(env)}
+                      >
+                        {env.toUpperCase()}
+                      </button>
+
                     </div>
+                  ))}
+
+                  {higherFilteredApplications.map((app, index) => (
+                    <>
+                      {/* APPLICATION BUTTON */}
+                      <button
+                        key={app.name}
+                        className="app-card slide-up"
+                        style={{ animationDelay: `${index * 60}ms` }}
+                        onClick={() => setSelectedApp(app)}
+                      >
+                        {app.name}
+                      </button>
+
+                      {/* BALLS */}
+                      <div className="status-cell">
+                        <button
+                          className="env-btn mini"
+                          onClick={() => setSelectedApp(findApplicationByName(app.name, "u3") || null)}>
+                          {getBall("u3", app.name)}
+                        </button>
+                      </div>
+                      <div className="status-cell">
+                        <button
+                          className="env-btn mini"
+                          onClick={() => setSelectedApp(findApplicationByName(app.name, "u4") || null)}>
+                          {getBall("u4", app.name)}
+                        </button>
+                      </div>
+                      <div className="status-cell">
+                        <button
+                          className="env-btn mini"
+                          onClick={() => setSelectedApp(findApplicationByName(app.name, "u5") || null)}>
+                          {getBall("u5", app.name)}
+                        </button>
+                      </div>
+                    </>
                   ))}
                 </div>
               </>
@@ -179,7 +283,7 @@ function App() {
                     <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#020617", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
                   </span>
                 </div>
-                <select  style={{ position: "fixed", top: "68px" ,width: "468px"}}
+                <select style={{ position: "fixed", top: "68px", width: "468px" }}
                   className="team-select sidebar-select"
                   value={selectedTeam}
                   onChange={(e) => {
@@ -215,14 +319,14 @@ function App() {
                 ))}
               </div>
             </aside>
-            {selectedApp && applicationDetails[selectedEnv]  ? (
+            {selectedApp && applicationDetails[selectedEnv] ? (
 
               <main className="main"  >
                 <ContractComparisonResult {...applicationDetails[selectedEnv]!} />
               </main>
 
             ) : (
-              <div className="main placeholder" style={{paddingTop:"150px"}}>
+              <div className="main placeholder" style={{ paddingTop: "150px" }}>
                 <h2>⬅️ Select an application to view details</h2>
               </div>
             )}

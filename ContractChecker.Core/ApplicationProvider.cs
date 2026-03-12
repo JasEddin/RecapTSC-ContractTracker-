@@ -63,7 +63,7 @@ public class ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProv
             }
             // Todo: if not ?? add error to the model and show it in the UI
         }
-        _envAppsDict.Add(env, envAppsPair.Item2);
+        _envAppsDict.TryAdd(env, envAppsPair.Item2);
     }
 
     private async Task InitializeScanningApisFilesAsync(string env)
