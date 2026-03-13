@@ -588,6 +588,7 @@ body {
 }
 
 .env-tab {
+  color: #64748b;
   padding: 6px 14px;
   border-radius: 20px;
   border: 1px solid #d1d5db;
@@ -602,6 +603,8 @@ body {
 
 .env-tab.active {
   background: #0ea5e9;
-  color: white;
-  border-color: #0284c7;
+  color: rgb(0, 0, 0);
+  border-color:  #071c26;
+  /* increese the size of the tab */
+  transform: scale(1.2);
 }
