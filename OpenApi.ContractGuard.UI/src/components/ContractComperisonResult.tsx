@@ -8,8 +8,9 @@ export function ContractComparisonResult({
   server,
   localContractPath,
   env,
-  onEnvChange
-}: ApplicationDetails & { env: Environment; onEnvChange: (env: Environment) => void }) {
+  onEnvChange, 
+  getColorOfTab
+}: ApplicationDetails & { env: Environment; onEnvChange: (env: Environment) => void, getColorOfTab: (env: Environment, appName: string) => string }) {
 
   const [selectedEnv, setSelectedEnv] = useState<Environment>(env);
   const breakingChanges = changes.filter(change => change.impact === 1);
@@ -30,6 +31,7 @@ export function ContractComparisonResult({
               setSelectedEnv(env);
               onEnvChange(env);
             }}
+            style={{ backgroundColor: getColorOfTab(env, name) }}
           >
             {env.toUpperCase()}
           </button>

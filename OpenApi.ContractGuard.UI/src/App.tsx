@@ -166,6 +166,13 @@ function App() {
     return app?.changeImpact === 1;
   };
 
+  const getColorOfTab : (env: Environment, appName: string) => string = (env: Environment, appName: string) => {
+    const app = applications[env].find(a => a.name === appName);
+    debugger ;
+    if (!app) return "white";
+    return app.changeImpact === 1 ? "#dc4d4d" : "#8ad58a";
+  }
+
   const selectApp = (env: Environment, name: string) => {
     const app = applications[env].find(app => app.name === name);
     setSelectedEnv(env);
@@ -335,7 +342,7 @@ function App() {
             {selectedApp && applicationDetails[selectedEnv] ? (
 
               <main className="main"  >
-                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} onEnvChange={changeEnvironment} />
+                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} onEnvChange={changeEnvironment} getColorOfTab={getColorOfTab} />
               </main>
 
             ) : (
