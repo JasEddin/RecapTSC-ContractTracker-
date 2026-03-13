@@ -9,8 +9,9 @@ export function ContractComparisonResult({
   localContractPath,
   env,
   onEnvChange, 
-  getColorOfTab
-}: ApplicationDetails & { env: Environment; onEnvChange: (env: Environment) => void, getColorOfTab: (env: Environment, appName: string) => string }) {
+  getColorOfTab,
+  isDisabled
+}: ApplicationDetails & { env: Environment; onEnvChange: (env: Environment) => void, getColorOfTab: (env: Environment, appName: string) => string, isDisabled: (env: Environment, appName: string) => boolean }) {
 
   const [selectedEnv, setSelectedEnv] = useState<Environment>(env);
   const breakingChanges = changes.filter(change => change.impact === 1);
@@ -25,6 +26,7 @@ export function ContractComparisonResult({
       <div className="env-tabs">
         {Environments.map(env => (
           <button
+            disabled={isDisabled(env, name)}
             key={env}
             className={`env-tab ${selectedEnv === env ? "active" : ""}`}
             onClick={() => {

@@ -110,10 +110,19 @@ function App() {
     }
   }, [selectedApp, selectedEnv]);
 
+      const allApps = [...applications.u3, ...applications.u4, ...applications.u5];
+      const uniqueAppsMap = new Map<string, Application>();
+      allApps.forEach(app => {
+        if (!uniqueAppsMap.has(app.name)) {
+          uniqueAppsMap.set(app.name, app);
+        }
+      });
+      // order by name
+ const uniqueApps = Array.from(uniqueAppsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   const filteredApplicationsByTeam =
     selectedTeam === "ALL"
-      ? applications[selectedEnv]
-      : applications[selectedEnv].filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
+      ? uniqueApps
+      : uniqueApps.filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
 
   const higherFilteredApplications = isFilteredByCritical
     ? filteredApplicationsByTeam.filter(app => app.changeImpact === 1)
@@ -125,7 +134,7 @@ function App() {
 
   const uniqueTeams = Array.from(
     new Map(
-      filteredByCriticalOnly.map(app => [
+      allApps.map(app => [
         app.team.name.toLowerCase(),
         {
           name: app.team.name,
@@ -141,14 +150,14 @@ function App() {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
+ 
 
-  const allAppNames = Array.from(
-    new Set([
-      ...applications.u3.map(a => a.name),
-      ...applications.u4.map(a => a.name),
-      ...applications.u5.map(a => a.name)
-    ])
-  );
+
+
+    // const appInU3 = allAppNames.u3.find(app => app.name === name);
+    // const appInU4 = applications.u4.find(app => app.name === name);
+    // const appInU5 = applications.u5.find(app => app.name === name);
+
 
   const getBall = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
@@ -179,6 +188,10 @@ function App() {
     setSelectedApp(app || null);
   };
 
+  const isDisabled = (env: Environment, appName: string) => {
+    return !applications[env].find(a => a.name === appName);
+  }
+
   return (
     <>
       {!selectedApp && showHeader && (
@@ -192,7 +205,7 @@ function App() {
               <p className="subtitle">Watching your API contracts</p>
             </header>
             <div className="content fade-in">
-              <h2 className="section-title">{`Tracked applications (${higherFilteredApplications.length})`}
+              <h2 className="section-title">{`Tracked applications (${filteredApplicationsByTeam.length})`}
                 <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#f9f9f9", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
               </h2>
               <span className="filter-icon">
@@ -240,10 +253,14 @@ function App() {
                     </div>
                   ))}
 
+
+
                   {higherFilteredApplications.map((app, index) => (
                     <>
                       {/* APPLICATION BUTTON */}
                       <button
+                      
+                        disabled={!applications[selectedEnv].find(a => a.name === app.name)}
                         key={app.name}
                         className="app-card slide-up"
                         style={{ animationDelay: `${index * 60}ms` }}
@@ -342,7 +359,7 @@ function App() {
             {selectedApp && applicationDetails[selectedEnv] ? (
 
               <main className="main"  >
-                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} onEnvChange={changeEnvironment} getColorOfTab={getColorOfTab} />
+                <ContractComparisonResult {...applicationDetails[selectedEnv]!} env={selectedEnv} onEnvChange={changeEnvironment} getColorOfTab={getColorOfTab} isDisabled={isDisabled} />
               </main>
 
             ) : (
