@@ -154,11 +154,14 @@ function App() {
   const getBall = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
 
-    if (!app) return "⚪";
+    if (!app) return (
+                 <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d6d6d6" }}></span>
+    );
     if (app.changeImpact === 1) {
-      return "🔴";
+      return      (
+                  <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d13333" }}></span>);
     } else {
-      return "🟢";
+      return  (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#6d9f6d" }}></span>);
     }
   };
   const getImpact = (env: Environment, appName: string) => {
