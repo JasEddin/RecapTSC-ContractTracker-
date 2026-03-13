@@ -151,14 +151,6 @@ function App() {
       .join(" ");
 
  
-
-
-
-    // const appInU3 = allAppNames.u3.find(app => app.name === name);
-    // const appInU4 = applications.u4.find(app => app.name === name);
-    // const appInU5 = applications.u5.find(app => app.name === name);
-
-
   const getBall = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
 
@@ -177,7 +169,6 @@ function App() {
 
   const getColorOfTab : (env: Environment, appName: string) => string = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
-    debugger ;
     if (!app) return "white";
     return app.changeImpact === 1 ? "#dc4d4d" : "#8ad58a";
   }
@@ -187,6 +178,14 @@ function App() {
     setSelectedEnv(env);
     setSelectedApp(app || null);
   };
+  const selectAppInAnyEnv = (appName: string) => {
+    // if the app doesn't exist in the selected env, select the env where it exists and then select the app
+                          const envWhereAppExists = Environments.find(env => applications[env].find(a => a.name === appName));
+                            if (envWhereAppExists) {
+                          selectApp(envWhereAppExists, appName);
+                      
+                        }};
+    
 
   const isDisabled = (env: Environment, appName: string) => {
     return !applications[env].find(a => a.name === appName);
@@ -236,10 +235,8 @@ function App() {
             {!loading && !error && (
               <>
                 <div className="apps-table">
-
                   <div> </div>
-
-                  {(["u3", "u4", "u5"] as Environment[]).map(env => (
+                  { (Environments).map(env => (
                     <div className="env-header">
 
                       <button
@@ -252,26 +249,23 @@ function App() {
 
                     </div>
                   ))}
-
-
-
                   {higherFilteredApplications.map((app, index) => (
                     <>
                       {/* APPLICATION BUTTON */}
                       <button
-                      
-                        disabled={!applications[selectedEnv].find(a => a.name === app.name)}
                         key={app.name}
                         className="app-card slide-up"
                         style={{ animationDelay: `${index * 60}ms` }}
-                        onClick={() => setSelectedApp(app)}
-                      >
+                        onClick={() =>  selectAppInAnyEnv(app.name) }
+                      
+                        >
                         {app.name}
                       </button>
 
                       {/* BALLS */}
                       <div className="status-cell">
                         <button
+                        disabled={!applications[selectedEnv].find(a => a.name === app.name)}
                           className="env-btn mini"
                           onClick={() => {
                             selectApp("u3", app.name);
@@ -281,9 +275,9 @@ function App() {
                       </div>
                       <div className="status-cell">
                         <button
+                        disabled={!applications[selectedEnv].find(a => a.name === app.name)}
                           className="env-btn mini"
                           onClick={() => {
-                            debugger;
                             selectApp("u4", app.name);
                           }}>
                           {getBall("u4", app.name)}
@@ -291,6 +285,7 @@ function App() {
                       </div>
                       <div className="status-cell">
                         <button
+                         disabled={!applications[selectedEnv].find(a => a.name === app.name)}
                           className="env-btn mini"
                           onClick={() => {
                             selectApp("u5", app.name);
@@ -342,12 +337,13 @@ function App() {
                 {higherFilteredApplications.map((app) => (
                   <div
                     key={app.name}
-                    className={`sidebar-item ${selectedApp === app ? "active" : ""
-                      }`}
-                    onClick={() => setSelectedApp(app)}
+                    className={`sidebar-item ${selectedApp === app ? "active" : ""}`}
+                    onClick={() => 
+                      selectAppInAnyEnv(app.name)}
                   >
+                      {/* // show balls of envs in onlift */}
                     <span className="sidebar-icon">
-                      {app.changeImpact === 1 ? "🔴" : "🟢"}
+                       {Environments.map(env =>  getBall(env, app.name))}
                     </span>
                     <span className="sidebar-text">
                       {app.name}
@@ -374,6 +370,5 @@ function App() {
     </>
   );
 }
+  export default App;
 
-
-export default App;
