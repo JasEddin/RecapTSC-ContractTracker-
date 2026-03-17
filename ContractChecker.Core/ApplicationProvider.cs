@@ -4,42 +4,66 @@ using ContractChecker.Core.Comparison.enums;
 using ContractChecker.Core.Models;
 using Microsoft.OpenApi.Models;
 
-public class ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider) : IApplicationProvider
+public class ApplicationProvider: IApplicationProvider
 {
     // Todo: make type ViewModel, add errors to it
     public Dictionary<string, Dictionary<string, ApplicationDetail>> _envAppsDict= [];
-    private readonly IOpenApiLoader _openApiLoader = openApiLoader;
-    private readonly IContractFileProvider _contractFileProvider = contractFileProvider;
-    private IEnumerable<ContractFile>? _contractfilesWithValidServers;
+    private readonly IOpenApiLoader _openApiLoader;
+     private List<ContractFile> _allFilesContractsInApis;
+
+    public ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider) 
+    {
+        _openApiLoader = openApiLoader;
+        _allFilesContractsInApis = contractFileProvider.LoadAllLocalFiles();
+    }
+
+    public async Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync()
+    {
+        return _allFilesContractsInApis.Select(fc => new ApplicationInfo { Name = fc.Name, Team = fc.Team, ChangeImpact = ChangeImpact.Unknown }).ToList();
+    }
+
 
     public async Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync(string env)
     {
-        await InitializeScanningApisFilesAsync(env);
         await ExtractChangesAsync(env);
         // return a list of applications name and index 
         var applicationChangeImpactList = _envAppsDict[env].Select(kvp => new ApplicationInfo { Name = kvp.Key, Team = kvp.Value.Team, ChangeImpact = kvp.Value.Changes.Any(c => c.Impact == ChangeImpact.ContractUpdateRequired) ? ChangeImpact.ContractUpdateRequired : ChangeImpact.Informational });
         return applicationChangeImpactList;
     }
 
+
     public async Task<ApplicationDetail> GetApplicationAsync(string name, string env)
     {
-        await InitializeScanningApisFilesAsync(env);
-        await ExtractChangesAsync(env);
+        await ExtractChangesAsync(env).ConfigureAwait(false);
         return _envAppsDict[env][name];
     }
+
+
 
     async Task ExtractChangesAsync(string env)
     {
         // check of _envApps has the same environment and if yes return the ApplicationDetailDic from it
         if (_envAppsDict.ContainsKey(env))
-        {
-            return;
-        }
+        {return;}
 
         var envAppsPair = (env, new Dictionary<string, ApplicationDetail>());
 
-        // check _contractfilesWithValidServers is not null and if it is null initialize it by scanning the local files and validating the servers, if it is not null use it to extract the changes
-   
+        var appValidServerDict = await ExtractAllValidServersAsync().ConfigureAwait(false);
+
+        List<ContractFile> _contractfilesWithValidServers = (from fc in _allFilesContractsInApis
+                                          join kvp in appValidServerDict on fc.Name equals kvp.Key
+                                          select new ContractFile
+                                          {
+                                              Name = fc.Name,
+                                              PathInApis = fc.PathInApis,
+                                              LatestVersion = fc.LatestVersion,
+                                              Server = kvp.Value,
+                                              Team = fc.Team
+                                          }).ToList();
+
+
+        List<ContractFile> contractfilesWithUnvalidServers = _allFilesContractsInApis.Where(fc => !string.IsNullOrWhiteSpace(fc.Server) && (!appValidServerDict.ContainsKey(fc.Name) || appValidServerDict[fc.Name] != fc.Server)).ToList();
+
         foreach (ContractFile fc in _contractfilesWithValidServers)
         {
             OpenApiDocument? file1 = await _openApiLoader.LoadFromValidServerAsync(fc.Server, fc.LatestVersion, env).ConfigureAwait(false);
@@ -65,32 +89,9 @@ public class ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProv
         }
         _envAppsDict.TryAdd(env, envAppsPair.Item2);
     }
-
-    private async Task InitializeScanningApisFilesAsync(string env)
+ 
+    async Task<Dictionary<string, string>> ExtractAllValidServersAsync()
     {
-        if (_contractfilesWithValidServers != null) { return; }
-
-        List<ContractFile> allFilesContractsInApis = _contractFileProvider.LoadAllLocalFiles();
-        // stop here and return list of all applications unrelated to validServers.
-
-        var appServerdict = await ExtractAllValidServersAsync(allFilesContractsInApis, env);
-
-        _contractfilesWithValidServers = from fc in allFilesContractsInApis
-                                         join kvp in appServerdict on fc.Name equals kvp.Key
-                                         select new ContractFile
-                                         {
-                                             Name = fc.Name,
-                                             PathInApis = fc.PathInApis,
-                                             LatestVersion = fc.LatestVersion,
-                                             Server = kvp.Value,
-                                             Team = fc.Team
-                                         };
-
-    }
-
-    async Task<Dictionary<string, string>> ExtractAllValidServersAsync(List<ContractFile> contractFiles, string env)
-    {
-
         //1️⃣ Try cache first
         var cached = await UrlCacheStorage.LoadAsync();
 
@@ -103,7 +104,7 @@ public class ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProv
         var result = new Dictionary<string, string>();
         var unvalidServers = new Dictionary<string, string>();
 
-        foreach (var fc in contractFiles)
+        foreach (var fc in _allFilesContractsInApis)
         {
             if (string.IsNullOrWhiteSpace(fc.Server))
                 continue;
@@ -111,7 +112,7 @@ public class ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProv
             var apiName = fc.Name;
             if (string.IsNullOrWhiteSpace(apiName))
                 continue;
-                                                                  // todo pass env here and change caching 
+                                                
             var isValid = await _openApiLoader.ValidateServerAsync(fc.Server)
                                            .ConfigureAwait(false);
 

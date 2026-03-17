@@ -2,8 +2,9 @@
 {
     public enum ChangeImpact
     {
-        Informational,
-        ContractUpdateRequired
+        Informational=0,
+        ContractUpdateRequired=1,
+        Unknown = 2
     }
 }
  

@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Readers;
 public class OpenApiLoader : IOpenApiLoader
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private static IEnumerable<string> _environments = ["u3", "u4","u5"];
 
     public OpenApiLoader(IHttpClientFactory httpClientFactory)
     {
@@ -69,24 +70,26 @@ public class OpenApiLoader : IOpenApiLoader
         }
     }
 
-    public async Task<bool> ValidateServerAsync(string url, string env = "u3")
+    public async Task<bool> ValidateServerAsync(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
             return false;
-      
-        var swaggerLink = url.Replace("$(environment)", $".{env}.") + "/swagger/index.html";
-        var client = _httpClientFactory.CreateClient("OpenApiProbe");
-     
-        
-        if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
+        foreach (var env in _environments)
         {
-            Console.WriteLine($"[WARN] Invalid URL format: {swaggerLink}");
-            return false;
-        }
+            var swaggerLink = url.Replace("$(environment)", $".{env}.") + "/swagger/index.html";
+            var client = _httpClientFactory.CreateClient("OpenApiProbe");
 
-        if (await IsReachableAsync(client, uri))
-        {
-            return true;
+
+            if (!IsValidAbsoluteUrl(swaggerLink, out var uri))
+            {
+                Console.WriteLine($"[WARN] Invalid URL format: {swaggerLink}");
+                return false;
+            }
+
+            if (await IsReachableAsync(client, uri))
+            {
+                return true;
+            }
         }
         return false;
     }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
 type Application = {
-  changeImpact: 0 | 1;
+    changeImpact: 0 | 1 | 2;
   name: string;
   team: { name: string, mail: string };
 }
@@ -17,17 +17,18 @@ export type ApplicationDetails = {
   server: string;
   localContractPath: string;
   changes: {
-    changeType: number;
+    changeType: 0 | 1 | 2;
     path: string;
     operation: string;
     message: string;
-    impact: number;
+    impact: 0 | 1 | 2;
   }[];
 };
 
 function App() {
 
-  const [applications, setApplications] = useState<Record<Environment, Application[]>>({
+  const [applications, setApplications] = useState<Record<Environment|"noEnv", Application[]>>({
+    noEnv: [],
     u3: [],
     u4: [],
     u5: []
@@ -48,6 +49,31 @@ function App() {
   const [selectedTeam, setSelectedTeam] = useState<string>("ALL");
   const [showHeader, setShowHeader] = useState(true);
   const [isFilteredByCritical, setIsFilteredByCritical] = useState<boolean>(false);
+
+  useEffect(() => {
+    const loadApplications = async () => {
+      try {
+          const res = await fetch(`http://localhost:5093/api/applications/`);
+          if (!res.ok) {
+            throw new Error(`Failed loading applications`);
+          }
+          const data = await res.json();
+          setApplications(prev => ({
+            ...prev,
+            ['noEnv']: data
+          }));
+
+            setLoading(false);
+       
+        }
+       catch (err: any) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+    loadApplications();
+  }
+   ,[]);
 
 
   useEffect(() => {
@@ -109,8 +135,8 @@ function App() {
         .catch((err) => setError(err.message));
     }
   }, [selectedApp, selectedEnv]);
-
-      const allApps = [...applications.u3, ...applications.u4, ...applications.u5];
+      // const allApps = [...applications.u3, ...applications.u4, ...applications.u5];
+      const allApps = [...applications.noEnv];
       const uniqueAppsMap = new Map<string, Application>();
       allApps.forEach(app => {
         if (!uniqueAppsMap.has(app.name)) {
@@ -127,10 +153,6 @@ function App() {
   const higherFilteredApplications = isFilteredByCritical
     ? filteredApplicationsByTeam.filter(app => app.changeImpact === 1)
     : filteredApplicationsByTeam;
-
-  const filteredByCriticalOnly = isFilteredByCritical
-    ? applications[selectedEnv].filter(app => app.changeImpact === 1)
-    : applications[selectedEnv];
 
   const uniqueTeams = Array.from(
     new Map(
