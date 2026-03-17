@@ -1,5 +1,5 @@
-﻿using ContractChecker.Core.Models;
-using OpenApi.ContractGuard.Comparison;
+﻿using ContractChecker.Core.Comparison;
+using ContractChecker.Core.Models;
 
 public class ApplicationDetail
 {

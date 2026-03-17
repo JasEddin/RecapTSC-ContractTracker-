@@ -1,4 +1,4 @@
-﻿using OpenApi.ContractGuard.Comparison.enums;
+﻿using ContractChecker.Core.Comparison.enums;
 
 namespace ContractChecker.Core.Models
 {

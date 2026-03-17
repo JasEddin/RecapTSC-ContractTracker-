@@ -1,8 +1,8 @@
 ﻿using ContractChecker.Core.Caching;
+using ContractChecker.Core.Comparison;
+using ContractChecker.Core.Comparison.enums;
 using ContractChecker.Core.Models;
 using Microsoft.OpenApi.Models;
-using OpenApi.ContractGuard.Comparison;
-using OpenApi.ContractGuard.Comparison.enums;
 
 public class ApplicationProvider(IOpenApiLoader openApiLoader, IContractFileProvider contractFileProvider) : IApplicationProvider
 {

@@ -9,12 +9,12 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
+		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
 	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ContractChecker.Core\ContractChecker.Core.csproj" />
-    <ProjectReference Include="..\OpenApi.ContractGuard\OpenApi.ContractGuard.csproj" />
   </ItemGroup>
 
 </Project>

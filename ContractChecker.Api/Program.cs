@@ -1,5 +1,4 @@
-﻿using ContractChecker.Core.Models;
-using ContractChecker.Core.Processor;
+﻿using ContractChecker.Core.Processor;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -29,7 +28,7 @@ builder.Services.AddCors(options =>
             .WithOrigins("http://localhost:5173") // React dev server
             .AllowAnyHeader()
             .AllowAnyMethod();
-    });
+    }); 
 });
 
 var app = builder.Build();
