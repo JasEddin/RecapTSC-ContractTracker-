@@ -31,47 +31,33 @@ namespace ContractChecker.Core.Processor
                 .GetFiles(_contractsPath, "*.json", SearchOption.AllDirectories)
                 .Where(f => !f.EndsWith("settings.json", StringComparison.OrdinalIgnoreCase));
 
-            // 2. Group by filename 
-            var latestFiles = files
-                .Select(f => new
-                {
-                    FullPath = f,
-                    FileName = Path.GetFileName(f),
-                    Version = GetVersionFromParentFolder(f)
-                })
-                // only consider files that actually have a version folder
-                .Where(x => x.Version.HasValue)
-                .GroupBy(x => x.FileName)
-                // pick highest version
-                .Select(g => g
-                    .OrderByDescending(x => x.Version)
-                    .First()
-                    .FullPath)
-                .ToList();
+            var contractFiles = files.Select(TryLoadContractFromOpenApiFile).ToList();
+     
+             contractFiles = contractFiles
+                .GroupBy(cf => cf?.Name)
+                .Select(g => g.OrderByDescending(cf => cf?.LatestVersion).FirstOrDefault())
+                .Where(cf => cf != null)
+                .ToList()!;
 
-            var contractFiles = latestFiles
-                .Select(TryLoadContractFromOpenApiFile)
-                .OfType<ContractFile>()
-                .ToList();
             return contractFiles;
         }
 
         // method to load a json file and extract the name and the server url from it, the json file has the following format:
         private ContractFile? TryLoadContractFromOpenApiFile(string filePath)
         {
+            var contractFile = new ContractFile
+            {
+                PathInApis = filePath
+            };
             try
             {
-                var contractFile = new ContractFile
-                {
-                    PathInApis = filePath
-                };
 
                 using var stream = File.OpenRead(filePath);
                 //  Check if the file is empty 
                 var reader = new OpenApiStreamReader();
                 var doc = reader.Read(stream, out var diagnostics);
 
-                (contractFile.Name, contractFile.Server) = GetNameAnddServer(filePath);
+                (contractFile.Name, contractFile.Server) = GetNameAndServer(filePath);
 
                 contractFile.Team = NormalizeTeam(doc.Info?.Contact);
 
@@ -79,13 +65,27 @@ namespace ContractChecker.Core.Processor
 
                 return contractFile;
             }
-            catch (Exception)
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Sequence contains no elements"))
             {
                 return null;
             }
+            catch (Exception ex)
+            {
+                return new ContractFile
+                {
+                    PathInApis = filePath,
+                    Name = Path.GetFileName(filePath),
+                    Server = "Unknown",
+                    Team = new Team { Name = "Unknown", Mail = "Unknown" },
+                    LatestVersion = GetVersionFromParentFolder(filePath) ?? 0,
+                    Errors = new[] { $"Failed to read OpenAPI document: {ex.Message}" }
+                };
+            }
         }
 
-        private (string name, string server) GetNameAnddServer(string filePath)
+
+
+        private (string name, string server) GetNameAndServer(string filePath)
         {
             var (name, server) = ("", "");
             // get the path of settings.yaml in the same folder of the json file
