@@ -11,18 +11,16 @@ public class OpenApiLoader : IOpenApiLoader
         _httpClientFactory = httpClientFactory;
     }
 
-    public OpenApiDocument? LoadFromPath(string path)
+    public ( OpenApiDocument? Document, string[] Errors) LoadFromPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            Console.WriteLine("[WARN] File path is empty.");
-            return null;
+                return (null, [ "File path is empty." ]);
         }
 
         if (!File.Exists(path))
         {
-            Console.WriteLine($"[WARN] OpenAPI file not found: {path}");
-            return null;
+            return (null, [ "File not found." ]);
         }
 
         try
@@ -34,39 +32,27 @@ public class OpenApiLoader : IOpenApiLoader
 
             if (diagnostics.Errors.Any())
             {
-                Console.WriteLine($"[WARN] Invalid OpenAPI document: {path}");
-                foreach (var error in diagnostics.Errors)
-                {
-                    Console.WriteLine($"   - {error.Message}");
-                }
-                return document;
+                return  (document, diagnostics.Errors.Select(e => $"Invalid OpenAPI document: {e.Message}").ToArray());
             }
 
             if (document == null)
             {
-                Console.WriteLine($"[WARN] Failed to parse OpenAPI document: {path}");
-                return null;
+                return (null, [ "Failed to parse OpenAPI document." ]);
             }
 
-            return document;
+            return (document, Array.Empty<string>());
         }
         catch (IOException ex)
         {
-            Console.WriteLine($"[ERROR] IO error while reading: {path}");
-            Console.WriteLine(ex.Message);
-            return null;
+            return (null, [ $"IO error while reading: {ex.Message}" ]);
         }
         catch (UnauthorizedAccessException ex)
         {
-            Console.WriteLine($"[ERROR] No permission to read: {path}");
-            Console.WriteLine(ex.Message);
-            return null;
+            return (null, [ $"No permission to read: {path}", ex.Message ]);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[ERROR] Unexpected error while loading: {path}");
-            Console.WriteLine(ex.Message);
-            return null;
+            return (null, [ $"Unexpected error: {ex.Message}" ]);
         }
     }
 
@@ -95,7 +81,7 @@ public class OpenApiLoader : IOpenApiLoader
     }
 
 
-    public async Task<OpenApiDocument?> LoadFromValidServerAsync(
+    public async Task<( OpenApiDocument? Document, string[] Errors)> LoadFromValidServerAsync(
      string server,
      int latestVersion,
      string environment = "u3")
@@ -103,7 +89,7 @@ public class OpenApiLoader : IOpenApiLoader
         if (string.IsNullOrWhiteSpace(server))
         {
             Console.WriteLine("[WARN] Server URL is empty.");
-            return null;
+            return (null, ["Server URL is empty."]);
         }
         server = server.Replace("$(environment)", $".{environment}.");
         var candidateUrls = new[]
@@ -138,52 +124,22 @@ public class OpenApiLoader : IOpenApiLoader
 
                 if (diagnostics.Errors.Any())
                 {
-                    Console.WriteLine($"[WARN] Invalid OpenAPI document at {url}");
-                    continue;  // toDo return the error to UI
+                    
+                    if (document.Paths == null) 
+                       continue;
+
+                    return (document, diagnostics.Errors.Select(e => $"Invalid OpenAPI document at {url}: {e.Message}").ToArray());
                 }
 
-                Console.WriteLine($"[INFO] Successfully loaded OpenAPI from {url}");
-                return document;
+                return (document, Array.Empty<string>());
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                return (null, new[] { $"Unexpected error: {ex.Message}" });
             }
         }
-        Console.WriteLine($"[ERROR] No valid OpenAPI endpoint found for {server}");
-        return null;
-    }
-
-    public async Task<OpenApiDocument> LoadFromUrlAsync(string url)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-            throw new ArgumentException("Url must not be empty.", nameof(url));
-
-        using var httpClient = new HttpClient();
-
-        using var response = await httpClient.GetAsync(url);
-
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException(
-                $"Failed to download OpenAPI document. Status: {response.StatusCode}");
-
-        using var stream = await response.Content.ReadAsStreamAsync();
-        var reader = new OpenApiStreamReader();
-
-        var document = reader.Read(stream, out var diagnostics);
-
-        if (diagnostics.Errors.Any())
-        {
-            throw new InvalidOperationException(
-                "Invalid OpenAPI document:" + Environment.NewLine +
-                string.Join(Environment.NewLine, diagnostics.Errors.Select(e => e.Message)));
-        }
-
-        if (document is null)
-            throw new InvalidOperationException("Failed to parse OpenAPI document.");
-
-        return document;
+        return (null, new[] { "No valid OpenAPI endpoint found for server: " + server });
     }
 
     private static async Task<bool> IsReachableAsync(HttpClient client, Uri uri)

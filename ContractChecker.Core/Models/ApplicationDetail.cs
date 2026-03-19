@@ -8,4 +8,5 @@ public class ApplicationDetail
     public string LocalContractPath { get; set; }
     public Team Team { get; set; }
     public List<ContractChange> Changes { get; set; }
+    public List<Error>? Errors { get; set; } 
 }

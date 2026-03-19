@@ -2,8 +2,7 @@
 
 public interface IOpenApiLoader
 {
-    OpenApiDocument? LoadFromPath(string path);
-    Task<OpenApiDocument> LoadFromUrlAsync(string url);
-    Task<OpenApiDocument?> LoadFromValidServerAsync(string server, int latestVersion, string env = "u3");
+    (OpenApiDocument? Document, string[] Errors) LoadFromPath(string path);
+    Task<( OpenApiDocument? Document, string[] Errors)> LoadFromValidServerAsync(string server, int latestVersion, string env = "u3");
     Task<bool> ValidateServerAsync(string url);
 }

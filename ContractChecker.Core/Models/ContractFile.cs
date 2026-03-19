@@ -12,6 +12,8 @@ namespace ContractChecker.Core.Models
         public string Server { get; set; }
 
         public Team Team { get; set; }
+
+        public IEnumerable<string> Errors { get; set; }
     }
 
     public class Team

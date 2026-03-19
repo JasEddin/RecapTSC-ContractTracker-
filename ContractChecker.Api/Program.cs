@@ -1,4 +1,5 @@
-﻿using ContractChecker.Core.Models;
+﻿using ContractChecker.Core.Comparison;
+using ContractChecker.Core.Models;
 using ContractChecker.Core.Processor;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IOpenApiLoader, OpenApiLoader>();
 builder.Services.AddSingleton<IApplicationProvider, ApplicationProvider>();
 builder.Services.AddSingleton<IContractFileProvider, ContractFileProvider>();
+builder.Services.AddSingleton<IContractComparer, OpenApiComparer>();
 
 builder.Services.AddHttpClient("OpenApiProbe", client =>
 {
@@ -29,7 +31,7 @@ builder.Services.AddCors(options =>
             .WithOrigins("http://localhost:5173") // React dev server
             .AllowAnyHeader()
             .AllowAnyMethod();
-    }); 
+    });
 });
 
 var app = builder.Build();
@@ -46,22 +48,22 @@ app.UseHttpsRedirection();
 
 app.MapHealthChecks("/health");
 
-app.MapGet("/api/applications/", async (IApplicationProvider provider, IContractFileProvider contractFileProvider) =>
+app.MapGet("/api/applications/", async (IApplicationProvider provider, IContractFileProvider contractFileProvider, IContractComparer comparer) =>
 {
 
-    IEnumerable<ApplicationInfo> result =      await  provider.GetApplicationsAsync();
+    IEnumerable<ApplicationInfo> result = await provider.GetApplicationsAsync();
     return Results.Ok(result);
 });
 
-app.MapGet("/api/applications/{environment}", async (IApplicationProvider provider, IContractFileProvider contractFileProvider, string environment= "u3") =>
+app.MapGet("/api/applications/{environment}", async (IApplicationProvider provider, IContractFileProvider contractFileProvider, IContractComparer comparer, string environment = "u3") =>
 {
 
     IEnumerable<ApplicationInfo> result = await provider.GetApplicationsAsync(environment);
     return Results.Ok(result);
 });
-app.MapGet("/api/application", async (IApplicationProvider provider, IContractFileProvider contractFileProvider, string name, string environment= "u3") =>
+app.MapGet("/api/application", async (IApplicationProvider provider, IContractFileProvider contractFileProvider, IContractComparer comparer, string name, string environment = "u3") =>
 {
-    ApplicationDetail result = await provider.GetApplicationAsync(name , environment);
+    ApplicationDetail result = await provider.GetApplicationAsync(name, environment);
     return Results.Ok(result);
 });
 
