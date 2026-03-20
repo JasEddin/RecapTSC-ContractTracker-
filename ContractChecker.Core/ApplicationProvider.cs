@@ -97,7 +97,7 @@ public class ApplicationProvider : IApplicationProvider
             {
                 var fc = _allFilesContractsInApis.First(f => f.Name == name);
                 return new ApplicationDetail { Name = fc.Name, Server = fc.Server, LocalContractPath = fc.PathInApis, Changes = null, Team = fc.Team,
-                    Errors =fc.Errors?.Select(x => new Error { Message = x }).ToList() };
+                    Errors = new List<Error> { new Error { Message = $"Invalid server: {fc.Server}" } } };
             });
 
         foreach (ContractFile fc in _contractfilesWithValidServers)

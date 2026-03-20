@@ -215,7 +215,7 @@ const loadEnvironments = async () => {
               <p className="subtitle">Watching your API contracts</p>
             </header>
             <div className="content fade-in">
-              <h2 className="section-title">{`Tracked applications (${filteredApplicationsByTeam.length})`}
+              <h2 className="section-title">{`Tracked applications (${higherFilteredApplications.length})`}
                 <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#f9f9f9", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
               </h2>
               <span className="filter-icon">
