@@ -16,6 +16,10 @@ type ApplicationInfo = {
   changeImpact: ChangeImpact;
   name: string;
   team: { name: string, mail: string };
+  errors: {
+    details: string;
+    message: string;
+  }[]|null;
 }
 
 export type Environment = "u3" | "u4" | "u5";
@@ -155,21 +159,21 @@ const loadEnvironments = async () => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-  const getBall = (env: Environment, appName: string) => {
+  const getBall = (env: Environment, appName: string, hasErrors?: boolean) => {
     const app = applications[env].find(a => a.name === appName);
 
     if (!app) return (
-      <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d6d6d6" }}></span>
+      <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d6d6d6", border: hasErrors ? "1px solid #80046f" : "none" }}></span>
     );
     if (app.changeImpact === ChangeImpact.ContractUpdateRequired) {
       return (
-        <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d13333" }}></span>);
+        <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d13333" , border: hasErrors ? "1px solid #80046f" : "none" }}></span>);
     } else
       if (app.changeImpact === ChangeImpact.Informational) {
-        return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#6d9f6d" }}></span>);
+        return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#6d9f6d", border: hasErrors ? "1px solid #80046f" : "none" }}></span>);
       }
       else {
-        return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#868181" }}></span>);
+        return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#868181", border: hasErrors ? "1px solid #80046f" : "none" }}></span>);
       }
   };
   const getColorOfTab: (env: Environment, appName: string) => string = (env: Environment, appName: string) => {
@@ -258,7 +262,6 @@ const loadEnvironments = async () => {
                     <>
                       {/* APPLICATION BUTTON */}
                       <button
-                        //  Todo display tooltip on hover with  error messages
                         disabled={!isApplicationExistInAnyEnv(app.name)
                         }
                         key={app.name}
@@ -271,20 +274,34 @@ const loadEnvironments = async () => {
                       </button>
 
                       {/* BALLS */}
-                      {Environments.map(env => (
-                        <div className="status-cell">
-                          <button
-                            disabled={
-                              isDisabled(env, app.name)
-                            }
-                            className="env-btn mini"
-                            onClick={() => {
-                              selectAppInEnv(env, app.name);
-                            }}>
-                            {getBall(env, app.name)}
-                          </button>
-                        </div>
-                      ))}
+                      {Environments.map(env => {
+                          const hasErrors = app?.errors && app.errors.length > 0;
+                        return (
+                          <div
+                            key={`${app.name}-${env}`}
+                            className="status-cell tooltip-container">
+                            <button 
+                            style={{
+                              borderColor: hasErrors ? "#80046f" : "#cbd5e1"
+                            }}
+                              disabled={isDisabled(env, app.name)}
+                              className="env-btn mini"
+                              onClick={() => { selectAppInEnv(env, app.name) }}>
+                              {getBall(env, app.name,undefined)}
+                            </button>
+                            {hasErrors && (
+                              <div className="tooltip-card">
+                                {app.errors!.map((err, i) => (
+                                  <div key={i} className="tooltip-error">
+                                    <strong>{err.message}</strong>
+                                    <p>{err.details}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </>
                   ))}
                 </div>
@@ -331,15 +348,16 @@ const loadEnvironments = async () => {
                 {higherFilteredApplications.map((app) => (
                   <div
                     key={app.name}
-
                     className={`sidebar-item ${selectedApp === app ? "active" : ""}`}
-
                     onClick={() =>
                       selectAppInAnyEnv(app.name)}
                   >
                     {/* // show balls of envs in onlift */}
                     <span className="sidebar-icon">
-                      {Environments.map(env => getBall(env, app.name))}
+                      {Environments.map(env => {
+                               const hasErrors = app?.errors && app.errors.length > 0? true : false;
+                         return getBall(env, app.name, hasErrors);
+                      })}
                     </span>
                     <span className="sidebar-text">
                       {app.name}
