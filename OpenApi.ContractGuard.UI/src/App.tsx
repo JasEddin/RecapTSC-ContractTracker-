@@ -3,13 +3,22 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
-type Application = {
-  changeImpact: 0 | 1 | 2;
+
+const ChangeImpact = {
+  Informational: 0,
+  ContractUpdateRequired: 1,
+  Unknown: 2
+} as const;
+
+export type ChangeImpact = (typeof ChangeImpact)[keyof typeof ChangeImpact];
+
+type ApplicationInfo = {
+  changeImpact: ChangeImpact;
   name: string;
   team: { name: string, mail: string };
 }
-export type Environment = "u3" | "u4" | "u5";
 
+export type Environment = "u3" | "u4" | "u5";
 export const Environments: Environment[] = ["u3", "u4", "u5"];
 
 export type ApplicationDetails = {
@@ -17,24 +26,21 @@ export type ApplicationDetails = {
   server: string;
   localContractPath: string;
   changes: {
-    changeType: 0 | 1 | 2;
+    changeType: ChangeImpact;
     path: string;
     operation: string;
     message: string;
-    impact: 0 | 1 | 2;
+    impact: ChangeImpact;
   }[];
 };
 
 function App() {
 
-  const [applications, setApplications] = useState<Record<Environment | "noEnv", Application[]>>({
-    noEnv: [],
+  const [applications, setApplications] = useState<Record<Environment , ApplicationInfo[]>>({
     u3: [],
     u4: [],
     u5: []
   });
-
-
 
   const [applicationDetails, setApplicationDetails] = useState<Record<Environment, ApplicationDetails | null>>({
     u3: null,
@@ -43,7 +49,7 @@ function App() {
   });
 
   const [selectedEnv, setSelectedEnv] = useState<Environment>("u3");
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [selectedApp, setSelectedApp] = useState<ApplicationInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string>("ALL");
@@ -51,60 +57,38 @@ function App() {
   const [isFilteredByCritical, setIsFilteredByCritical] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadApplications = async () => {
-      try {
-        const res = await fetch(`http://localhost:5093/api/applications/`);
-        if (!res.ok) {
-          throw new Error(`Failed loading applications`);
-        }
-        const data = await res.json();
-        setApplications(prev => ({
-          ...prev,
-          ['noEnv']: data
-        }));
+const loadEnvironments = async () => {
+  try {
+    setLoading(true);
+    const results = await Promise.all(
+      Environments.map(env =>
+        fetch(`http://localhost:5093/api/applications/${env}`)
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed loading ${env}`);
+            return res.json().then(data => ({ env, data }));
+          })
+      )
+    );
 
-        setLoading(false);
+    const envData = results.reduce((acc, { env, data }) => {
+      acc[env] = data;
+      return acc;
+    }, {} as Record<Environment, ApplicationInfo[]>);
 
-      }
-      catch (err: any) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-    const loadEnvironments = async () => {
-      try {
-        setLoading(true);
-        for (let i = 0; i < Environments.length; i++) {
-          const env = Environments[i];
-          const res = await fetch(`http://localhost:5093/api/applications/${env}`);
-          if (!res.ok) {
-            throw new Error(`Failed loading ${env}`);
-          }
-          const data = await res.json();
-          setApplications(prev => ({
-            ...prev,
-            [env]: data
-          }));
-          // stop loading after first env
-          if (i === 0) {
-            setLoading(false);
-          }
-        }
-      } catch (err: any) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-    loadApplications();
+    setApplications(prev => ({
+      ...prev,
+      ...envData
+    }));
+
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+} 
     loadEnvironments();
   }
     , []);
-
-
-  useEffect(() => {
-
-  }, []);
-
 
   const getAppDetails = (appName: string, env: Environment) => {
     // setSelectedEnv(env);
@@ -134,10 +118,9 @@ function App() {
     }
   }, [selectedApp, selectedEnv]);
 
-  const allAppsWithoutImpact = [...applications.noEnv];
   const allAppsWithImpact = [...applications.u3, ...applications.u4, ...applications.u5];
 
-  const uniqueAppsMap = new Map<string, Application>();
+  const uniqueAppsMap = new Map<string, ApplicationInfo>();
   allAppsWithImpact.forEach(app => {
     if (!uniqueAppsMap.has(app.name)) {
       uniqueAppsMap.set(app.name, app);
@@ -151,7 +134,7 @@ function App() {
       : uniqueApps.filter(app => app.team.name.toLowerCase() === selectedTeam.toLowerCase());
 
   const higherFilteredApplications = isFilteredByCritical
-    ? filteredApplicationsByTeam.filter(app => app.changeImpact === 1)
+    ? filteredApplicationsByTeam.filter(app => app.changeImpact === ChangeImpact.ContractUpdateRequired)
     : filteredApplicationsByTeam;
 
   const uniqueTeams = Array.from(
@@ -178,11 +161,11 @@ function App() {
     if (!app) return (
       <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d6d6d6" }}></span>
     );
-    if (app.changeImpact === 1) {
+    if (app.changeImpact === ChangeImpact.ContractUpdateRequired) {
       return (
         <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d13333" }}></span>);
     } else
-      if (app.changeImpact === 0) {
+      if (app.changeImpact === ChangeImpact.Informational) {
         return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#6d9f6d" }}></span>);
       }
       else {
@@ -191,8 +174,8 @@ function App() {
   };
   const getColorOfTab: (env: Environment, appName: string) => string = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
-    if (app?.changeImpact == 2) return "grey";
-    return app?.changeImpact === 1 ? "#dc4d4d" : "#8ad58a";
+    if (app?.changeImpact == ChangeImpact.Unknown) return "grey";
+    return app?.changeImpact === ChangeImpact.ContractUpdateRequired ? "#dc4d4d" : "#8ad58a";
   }
 
   const selectAppInEnv = (env: Environment, name: string) => {
@@ -202,16 +185,16 @@ function App() {
   };
   const isApplicationExistInAnyEnv = (appName: string) => {
 
-    return allAppsWithImpact.some(app => app.name === appName && app.changeImpact !== 2);
+    return allAppsWithImpact.some(app => app.name === appName && app.changeImpact !== ChangeImpact.Unknown);
   }
   const selectAppInAnyEnv = (appName: string) => {
     if (isApplicationExistInAnyEnv(appName)) {
-      const env = Environments.find(env => applications[env].find(a => a.name === appName && (a.changeImpact === 1 || a.changeImpact === 0)))!;
+      const env = Environments.find(env => applications[env].find(a => a.name === appName && (a.changeImpact === ChangeImpact.ContractUpdateRequired || a.changeImpact === ChangeImpact.Informational)))!;
       selectAppInEnv(env, appName);
     }
   }
   const isDisabled = (env: Environment, appName: string) => {
-    return !applications[env].find(a => a.name === appName) || applications[env].find(a => a.name === appName)?.changeImpact === 2;
+    return !applications[env].find(a => a.name === appName) || applications[env].find(a => a.name === appName)?.changeImpact === ChangeImpact.Unknown;
   }
 
 
@@ -276,7 +259,6 @@ function App() {
                       {/* APPLICATION BUTTON */}
                       <button
                         //  Todo display tooltip on hover with  error messages
-
                         disabled={!isApplicationExistInAnyEnv(app.name)
                         }
                         key={app.name}
