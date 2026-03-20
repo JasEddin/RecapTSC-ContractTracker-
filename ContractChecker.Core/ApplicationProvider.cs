@@ -25,13 +25,34 @@ public class ApplicationProvider : IApplicationProvider
     }
 
     public async Task<IEnumerable<ApplicationInfo>> GetApplicationsAsync(string env)
-    {
+    {                                               
         await ExtractChangesAsync(env);
         // return a list of applications name and index 
-        var applicationChangeImpactList = _envAppsDict[env].Select(kvp => new ApplicationInfo { Name = kvp.Key, Team = kvp.Value.Team, ChangeImpact = kvp.Value.Changes.Any(c => c.Impact == ChangeImpact.ContractUpdateRequired) ? ChangeImpact.ContractUpdateRequired : ChangeImpact.Informational,
-        Errors = kvp.Value.Errors
+        var applicationChangeImpactList = _envAppsDict[env].Select(kvp => new ApplicationInfo { Name = kvp.Key, Team = kvp.Value.Team,
+            ChangeImpact = getImpact(kvp.Value.Changes),
+            Errors = kvp.Value.Errors
         });
         return applicationChangeImpactList;
+    }
+
+    private ChangeImpact getImpact(List<ContractChange>? changes)
+    {
+        if (changes == null)
+        {
+            return ChangeImpact.Unknown;
+        }
+
+        if (!changes.Any())
+        {
+            return ChangeImpact.Unknown;
+        }
+
+        if (changes.Any(c => c.Impact == ChangeImpact.ContractUpdateRequired))
+        {
+            return ChangeImpact.ContractUpdateRequired;
+        }
+
+        return ChangeImpact.Informational;
     }
 
     public async Task<ApplicationDetail> GetApplicationAsync(string name, string env)
@@ -75,7 +96,7 @@ public class ApplicationProvider : IApplicationProvider
             contractFilesWithInvalidServersNames.ToDictionary(name => name, name =>
             {
                 var fc = _allFilesContractsInApis.First(f => f.Name == name);
-                return new ApplicationDetail { Name = fc.Name, Server = fc.Server, LocalContractPath = fc.PathInApis, Changes = [], Team = fc.Team,
+                return new ApplicationDetail { Name = fc.Name, Server = fc.Server, LocalContractPath = fc.PathInApis, Changes = null, Team = fc.Team,
                     Errors =fc.Errors?.Select(x => new Error { Message = x }).ToList() };
             });
 

@@ -83,15 +83,14 @@ namespace ContractChecker.Core.Processor
             }
         }
 
-
-
         private (string name, string server) GetNameAndServer(string filePath)
         {
             var (name, server) = ("", "");
-            // get the path of settings.yaml in the same folder of the json file
             var settingsFilePath = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, "settings.yaml");
+
             if (!File.Exists(settingsFilePath))
-                return (name, server);
+                return ( Path.GetFileNameWithoutExtension(filePath)
+                    , server);
 
             // find properte's value of backendEndpoint: 
             var lines = File.ReadAllLines(settingsFilePath);
@@ -112,6 +111,8 @@ namespace ContractChecker.Core.Processor
 
                 }
             }
+
+             
             return (name, server);
         }
 

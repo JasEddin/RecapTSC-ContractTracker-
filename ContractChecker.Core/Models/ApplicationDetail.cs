@@ -7,6 +7,6 @@ public class ApplicationDetail
     public string Server { get; set; }
     public string LocalContractPath { get; set; }
     public Team Team { get; set; }
-    public List<ContractChange> Changes { get; set; }
+    public List<ContractChange>? Changes { get; set; }
     public List<Error>? Errors { get; set; } 
 }
