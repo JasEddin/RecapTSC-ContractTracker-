@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ContractComparisonResult } from "./components/ContractComperisonResult";
 
 type Application = {
-    changeImpact: 0 | 1 | 2;
+  changeImpact: 0 | 1 | 2;
   name: string;
   team: { name: string, mail: string };
 }
@@ -27,7 +27,7 @@ export type ApplicationDetails = {
 
 function App() {
 
-  const [applications, setApplications] = useState<Record<Environment|"noEnv", Application[]>>({
+  const [applications, setApplications] = useState<Record<Environment | "noEnv", Application[]>>({
     noEnv: [],
     u3: [],
     u4: [],
@@ -53,31 +53,25 @@ function App() {
   useEffect(() => {
     const loadApplications = async () => {
       try {
-          const res = await fetch(`http://localhost:5093/api/applications/`);
-          if (!res.ok) {
-            throw new Error(`Failed loading applications`);
-          }
-          const data = await res.json();
-          setApplications(prev => ({
-            ...prev,
-            ['noEnv']: data
-          }));
-
-            setLoading(false);
-       
+        const res = await fetch(`http://localhost:5093/api/applications/`);
+        if (!res.ok) {
+          throw new Error(`Failed loading applications`);
         }
-       catch (err: any) {
+        const data = await res.json();
+        setApplications(prev => ({
+          ...prev,
+          ['noEnv']: data
+        }));
+
+        setLoading(false);
+
+      }
+      catch (err: any) {
         setError(err.message);
         setLoading(false);
       }
     };
-    loadApplications();
-  }
-   ,[]);
-
-
-  useEffect(() => {
-    const loadApplications = async () => {
+    const loadEnvironments = async () => {
       try {
         setLoading(true);
         for (let i = 0; i < Environments.length; i++) {
@@ -102,49 +96,55 @@ function App() {
       }
     };
     loadApplications();
-  }, []);
-
-  const changeEnvironment = (env: Environment) => {
-    setSelectedEnv(env);
-
-    if (selectedApp) {
-      fetch(`http://localhost:5093/api/application?name=${selectedApp.name}&environment=${env}`)
-        .then(res => {
-          if (!res.ok) throw new Error("Failed to load application details");
-          return res.json();
-        })
-        .then(data => {
-          setApplicationDetails(prev => ({ ...prev, [env]: data }));
-        })
-        .catch(err => setError(err.message));
-    }
-  };
+    loadEnvironments();
+  }
+    , []);
 
 
   useEffect(() => {
+
+  }, []);
+
+
+  const getAppDetails = (appName: string, env: Environment) => {
+    // setSelectedEnv(env);
+    document.title = `${appName} - OpenAPI Contract Tracker`;
+    fetch(`http://localhost:5093/api/application?name=${appName}&environment=${env}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load application details");
+        return res.json();
+      })
+      .then(data => {
+        setApplicationDetails(prev => ({ ...prev, [env]: data }));
+      })
+      .catch(err => setError(err.message));
+
+  };
+
+  const changeEnvironment = (env: Environment) => {
+    setSelectedEnv(env);
     if (selectedApp) {
-      document.title = `${selectedApp.name} - OpenAPI Contract Tracker`;
-      fetch(`http://localhost:5093/api/application?name=${selectedApp.name}&environment=${selectedEnv}`)
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to load application details");
-          return res.json();
-        })
-        .then((data) => {
-          setApplicationDetails(prev => ({ ...prev, [selectedEnv]: data }));
-        })
-        .catch((err) => setError(err.message));
+      getAppDetails(selectedApp.name, env);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedApp) {
+      getAppDetails(selectedApp.name, selectedEnv);
     }
   }, [selectedApp, selectedEnv]);
-      // const allApps = [...applications.u3, ...applications.u4, ...applications.u5];
-      const allApps = [...applications.noEnv];
-      const uniqueAppsMap = new Map<string, Application>();
-      allApps.forEach(app => {
-        if (!uniqueAppsMap.has(app.name)) {
-          uniqueAppsMap.set(app.name, app);
-        }
-      });
-      // order by name
- const uniqueApps = Array.from(uniqueAppsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+  const allAppsWithoutImpact = [...applications.noEnv];
+  const allAppsWithImpact = [...applications.u3, ...applications.u4, ...applications.u5];
+
+  const uniqueAppsMap = new Map<string, Application>();
+  allAppsWithImpact.forEach(app => {
+    if (!uniqueAppsMap.has(app.name)) {
+      uniqueAppsMap.set(app.name, app);
+    }
+  });
+  // order by name
+  const uniqueApps = Array.from(uniqueAppsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   const filteredApplicationsByTeam =
     selectedTeam === "ALL"
       ? uniqueApps
@@ -156,7 +156,7 @@ function App() {
 
   const uniqueTeams = Array.from(
     new Map(
-      allApps.map(app => [
+      allAppsWithImpact.map(app => [
         app.team.name.toLowerCase(),
         {
           name: app.team.name,
@@ -172,49 +172,48 @@ function App() {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
- 
   const getBall = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
 
     if (!app) return (
-                 <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d6d6d6" }}></span>
+      <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d6d6d6" }}></span>
     );
     if (app.changeImpact === 1) {
-      return      (
-                  <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d13333" }}></span>);
-    } else {
-      return  (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#6d9f6d" }}></span>);
-    }
+      return (
+        <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#d13333" }}></span>);
+    } else
+      if (app.changeImpact === 0) {
+        return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#6d9f6d" }}></span>);
+      }
+      else {
+        return (<span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "6px", backgroundColor: "#868181" }}></span>);
+      }
   };
-  const getImpact = (env: Environment, appName: string) => {
-
+  const getColorOfTab: (env: Environment, appName: string) => string = (env: Environment, appName: string) => {
     const app = applications[env].find(a => a.name === appName);
-    return app?.changeImpact === 1;
-  };
-
-  const getColorOfTab : (env: Environment, appName: string) => string = (env: Environment, appName: string) => {
-    const app = applications[env].find(a => a.name === appName);
-    if (!app) return "white";
-    return app.changeImpact === 1 ? "#dc4d4d" : "#8ad58a";
+    if (app?.changeImpact == 2) return "grey";
+    return app?.changeImpact === 1 ? "#dc4d4d" : "#8ad58a";
   }
 
-  const selectApp = (env: Environment, name: string) => {
+  const selectAppInEnv = (env: Environment, name: string) => {
     const app = applications[env].find(app => app.name === name);
     setSelectedEnv(env);
     setSelectedApp(app || null);
   };
-  const selectAppInAnyEnv = (appName: string) => {
-    // if the app doesn't exist in the selected env, select the env where it exists and then select the app
-                          const envWhereAppExists = Environments.find(env => applications[env].find(a => a.name === appName));
-                            if (envWhereAppExists) {
-                          selectApp(envWhereAppExists, appName);
-                      
-                        }};
-    
+  const isApplicationExistInAnyEnv = (appName: string) => {
 
-  const isDisabled = (env: Environment, appName: string) => {
-    return !applications[env].find(a => a.name === appName);
+    return allAppsWithImpact.some(app => app.name === appName && app.changeImpact !== 2);
   }
+  const selectAppInAnyEnv = (appName: string) => {
+    if (isApplicationExistInAnyEnv(appName)) {
+      const env = Environments.find(env => applications[env].find(a => a.name === appName && (a.changeImpact === 1 || a.changeImpact === 0)))!;
+      selectAppInEnv(env, appName);
+    }
+  }
+  const isDisabled = (env: Environment, appName: string) => {
+    return !applications[env].find(a => a.name === appName) || applications[env].find(a => a.name === appName)?.changeImpact === 2;
+  }
+
 
   return (
     <>
@@ -245,14 +244,12 @@ function App() {
                 }}
               >
                 <option value="ALL">All Teams</option>
-
                 {uniqueTeams.map(team => (
                   <option key={team.name} value={team.name}>
                     {capitalizeWords(team.name)}
                   </option>
                 ))}
               </select>
-
 
             </div>
             {loading && <h2> ⏳ Loading applications...</h2>}
@@ -261,7 +258,7 @@ function App() {
               <>
                 <div className="apps-table">
                   <div> </div>
-                  { (Environments).map(env => (
+                  {(Environments).map(env => (
                     <div className="env-header">
 
                       <button
@@ -278,46 +275,34 @@ function App() {
                     <>
                       {/* APPLICATION BUTTON */}
                       <button
+                        //  Todo display tooltip on hover with  error messages
+
+                        disabled={!isApplicationExistInAnyEnv(app.name)
+                        }
                         key={app.name}
                         className="app-card slide-up"
                         style={{ animationDelay: `${index * 60}ms` }}
-                        onClick={() =>  selectAppInAnyEnv(app.name) }
-                      
-                        >
+                        onClick={() => selectAppInAnyEnv(app.name)}
+
+                      >
                         {app.name}
                       </button>
 
                       {/* BALLS */}
-                      <div className="status-cell">
-                        <button
-                        disabled={!applications[selectedEnv].find(a => a.name === app.name)}
-                          className="env-btn mini"
-                          onClick={() => {
-                            selectApp("u3", app.name);
-                          }}>
-                          {getBall("u3", app.name)}
-                        </button>
-                      </div>
-                      <div className="status-cell">
-                        <button
-                        disabled={!applications[selectedEnv].find(a => a.name === app.name)}
-                          className="env-btn mini"
-                          onClick={() => {
-                            selectApp("u4", app.name);
-                          }}>
-                          {getBall("u4", app.name)}
-                        </button>
-                      </div>
-                      <div className="status-cell">
-                        <button
-                         disabled={!applications[selectedEnv].find(a => a.name === app.name)}
-                          className="env-btn mini"
-                          onClick={() => {
-                            selectApp("u5", app.name);
-                          }}>
-                          {getBall("u5", app.name)}
-                        </button>
-                      </div>
+                      {Environments.map(env => (
+                        <div className="status-cell">
+                          <button
+                            disabled={
+                              isDisabled(env, app.name)
+                            }
+                            className="env-btn mini"
+                            onClick={() => {
+                              selectAppInEnv(env, app.name);
+                            }}>
+                            {getBall(env, app.name)}
+                          </button>
+                        </div>
+                      ))}
                     </>
                   ))}
                 </div>
@@ -337,6 +322,8 @@ function App() {
                   <img style={{ position: "fixed", top: "20px", left: "20px" }} src={Logo} className="sidebar-logo" />
                   <span style={{ position: "fixed", top: "20px", left: "60px" }} className="sidebar-title"> {`Applications (${higherFilteredApplications.length})`} </span>
                   <span className="filter-icon sidebar-filter-icon" style={{ position: "fixed", top: "20px", left: "440px" }}>
+                    {/* change */}
+
                     <button className="critical-filter-btn" style={{ background: isFilteredByCritical ? "grey" : "#020617", marginLeft: "8px" }} onClick={() => setIsFilteredByCritical(!isFilteredByCritical)} >  🔴 </button>
                   </span>
                 </div>
@@ -362,13 +349,15 @@ function App() {
                 {higherFilteredApplications.map((app) => (
                   <div
                     key={app.name}
+
                     className={`sidebar-item ${selectedApp === app ? "active" : ""}`}
-                    onClick={() => 
+
+                    onClick={() =>
                       selectAppInAnyEnv(app.name)}
                   >
-                      {/* // show balls of envs in onlift */}
+                    {/* // show balls of envs in onlift */}
                     <span className="sidebar-icon">
-                       {Environments.map(env =>  getBall(env, app.name))}
+                      {Environments.map(env => getBall(env, app.name))}
                     </span>
                     <span className="sidebar-text">
                       {app.name}
@@ -395,5 +384,5 @@ function App() {
     </>
   );
 }
-  export default App;
+export default App;
 
